@@ -11,26 +11,34 @@ import DashboardPanel from "./DashboardPanel";
 import ServicesPanel from "./ServicesPanel";
 import ServiceEditorPanel from "./ServiceEditorPanel";
 import TestimonialsPanel from "./TestimonialsPanel";
-import WebsiteImagesPanel from "./WebsiteImagesPanel";
 import MembersPanel from "./MembersPanel";
 import SettingsPanel from "./SettingsPanel";
+import {
+  IconDashboard,
+  IconProducts,
+  IconTestimonials,
+  IconMembers,
+  IconSettings,
+  IconLock,
+  IconSearch,
+  IconChevronDown,
+  IconChevronRight,
+} from "./icons";
 
 type Tab =
   | "dashboard"
   | "services"
   | "service-editor"
   | "testimonials"
-  | "images"
   | "members"
   | "settings";
 
-const NAV: { id: Tab; icon: string; label: string }[] = [
-  { id: "dashboard", icon: "📊", label: "Dashboard" },
-  { id: "services", icon: "🛠️", label: "Products" },
-  { id: "testimonials", icon: "💬", label: "Testimonials" },
-  { id: "images", icon: "🖼️", label: "Website Images" },
-  { id: "members", icon: "👥", label: "Members" },
-  { id: "settings", icon: "⚙️", label: "Settings" },
+const NAV: { id: Tab; icon: React.ReactNode; label: string }[] = [
+  { id: "dashboard", icon: <IconDashboard />, label: "Dashboard" },
+  { id: "services", icon: <IconProducts />, label: "Products" },
+  { id: "testimonials", icon: <IconTestimonials />, label: "Testimonials" },
+  { id: "members", icon: <IconMembers />, label: "Members" },
+  { id: "settings", icon: <IconSettings />, label: "Settings" },
 ];
 
 function NewServiceForm({
@@ -173,7 +181,6 @@ export default function AdminPanel() {
   const {
     services,
     testimonials,
-    websiteImages,
     members,
     adminPassword,
     addService,
@@ -266,18 +273,6 @@ export default function AdminPanel() {
           },
         });
     });
-    websiteImages.forEach((i) => {
-      if (i.name.toLowerCase().includes(q))
-        results.push({
-          key: `i-${i.id}`,
-          label: i.name,
-          sub: "Website image",
-          onSelect: () => {
-            setTab("images");
-            setSearch("");
-          },
-        });
-    });
     members.forEach((m) => {
       if (m.name.toLowerCase().includes(q))
         results.push({
@@ -291,15 +286,15 @@ export default function AdminPanel() {
         });
     });
     return results.slice(0, 8);
-  }, [search, services, testimonials, websiteImages, members]);
+  }, [search, services, testimonials, members]);
 
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-[#0F1729] hero-grid flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
           <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-xl bg-linear-to-br from-cyan-400 to-[#072069] flex items-center justify-center text-white text-2xl mx-auto mb-4">
-              🔐
+            <div className="w-14 h-14 rounded-xl bg-linear-to-br from-cyan-400 to-[#072069] flex items-center justify-center text-white mx-auto mb-4">
+              <IconLock className="h-6 w-6" />
             </div>
             <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
             <p className="text-muted-foreground text-sm mt-1">
@@ -378,18 +373,18 @@ export default function AdminPanel() {
                     goTab("services");
                   } else goTab(item.id);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                   tab === item.id ||
                   (item.id === "services" && tab === "service-editor")
-                    ? "bg-white/10 text-[#3BE3A0]"
+                    ? "bg-[#3BE3A0] text-[#0A1B33] shadow-sm shadow-[#3BE3A0]/20"
                     : "text-gray-300 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <span>{item.icon}</span>
+                <span className="shrink-0">{item.icon}</span>
                 {item.label}
                 {item.id === "services" && (
-                  <span className="ml-auto text-[10px]">
-                    {servicesExpanded ? "▾" : "▸"}
+                  <span className="ml-auto">
+                    {servicesExpanded ? <IconChevronDown /> : <IconChevronRight />}
                   </span>
                 )}
               </button>
@@ -435,11 +430,11 @@ export default function AdminPanel() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search products, testimonials, images…"
+              placeholder="Search products, testimonials, members…"
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-border text-sm focus:outline-none focus:border-accent bg-[#F8FAFC]"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-              🔍
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <IconSearch />
             </span>
             {searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-border rounded-xl shadow-lg overflow-hidden z-30">
@@ -486,15 +481,7 @@ export default function AdminPanel() {
         <main className="flex-1 p-6 max-w-[1400px] w-full">
           {tab === "dashboard" && (
             <DashboardPanel
-              onNavigate={(next) =>
-                goTab(
-                  next === "services"
-                    ? "services"
-                    : next === "testimonials"
-                      ? "testimonials"
-                      : "images",
-                )
-              }
+              onNavigate={(next) => goTab(next)}
             />
           )}
           {tab === "services" && (
@@ -513,7 +500,6 @@ export default function AdminPanel() {
             />
           )}
           {tab === "testimonials" && <TestimonialsPanel />}
-          {tab === "images" && <WebsiteImagesPanel />}
           {tab === "members" && <MembersPanel />}
           {tab === "settings" && <SettingsPanel />}
         </main>

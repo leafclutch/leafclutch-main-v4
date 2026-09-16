@@ -2,18 +2,18 @@
 
 import { useAdmin } from '@/app/context/AdminContext';
 import { relativeTime } from './shared';
+import { IconProducts, IconCheckCircle, IconTestimonials, IconMembers } from './icons';
 
-export default function DashboardPanel({ onNavigate }: { onNavigate: (tab: 'services' | 'testimonials' | 'images') => void }) {
-  const { services, testimonials, websiteImages } = useAdmin();
+export default function DashboardPanel({ onNavigate }: { onNavigate: (tab: 'services' | 'testimonials' | 'members') => void }) {
+  const { services, testimonials, members } = useAdmin();
 
   const publishedServices = services.filter(s => s.status === 'active').length;
-  const totalImages = services.reduce((sum, s) => sum + (s.heroImage ? 1 : 0) + s.images.length, 0) + websiteImages.length;
 
   const cards = [
-    { label: 'Total Products', value: services.length, icon: '🛠️', tone: 'from-cyan-400 to-[#072069]', onClick: () => onNavigate('services') },
-    { label: 'Published Products', value: publishedServices, icon: '✅', tone: 'from-[#3BE3A0] to-[#0EA5E9]', onClick: () => onNavigate('services') },
-    { label: 'Total Testimonials', value: testimonials.length, icon: '💬', tone: 'from-[#3B82F6] to-[#072069]', onClick: () => onNavigate('testimonials') },
-    { label: 'Total Images', value: totalImages, icon: '🖼️', tone: 'from-[#0EA5E9] to-[#11A4D4]', onClick: () => onNavigate('images') },
+    { label: 'Total Products', value: services.length, icon: <IconProducts />, tone: 'from-cyan-400 to-[#072069]', onClick: () => onNavigate('services') },
+    { label: 'Published Products', value: publishedServices, icon: <IconCheckCircle />, tone: 'from-[#3BE3A0] to-[#0EA5E9]', onClick: () => onNavigate('services') },
+    { label: 'Total Testimonials', value: testimonials.length, icon: <IconTestimonials />, tone: 'from-[#3B82F6] to-[#072069]', onClick: () => onNavigate('testimonials') },
+    { label: 'Total Members', value: members.length, icon: <IconMembers />, tone: 'from-[#0EA5E9] to-[#11A4D4]', onClick: () => onNavigate('members') },
   ];
 
   const recentServices = [...services].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6);
@@ -29,7 +29,7 @@ export default function DashboardPanel({ onNavigate }: { onNavigate: (tab: 'serv
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map(card => (
           <button key={card.label} type="button" onClick={card.onClick} className="text-left bg-white rounded-2xl p-5 border border-border hover:shadow-md hover:border-accent/40 transition-all">
-            <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${card.tone} flex items-center justify-center text-white text-lg mb-3`}>
+            <div className={`w-10 h-10 rounded-xl bg-linear-to-br ${card.tone} flex items-center justify-center text-white mb-3`}>
               {card.icon}
             </div>
             <p className="text-3xl font-extrabold text-foreground">{card.value}</p>

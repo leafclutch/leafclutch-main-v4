@@ -1033,7 +1033,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 28px 12px;
-  margin: 0 auto -52px;
+  margin: 56px auto -52px;
   max-width: 760px;
   padding: 26px 28px 44px;
   border-radius: 26px;
