@@ -12,6 +12,7 @@ import ServicesPanel from "./ServicesPanel";
 import ServiceEditorPanel from "./ServiceEditorPanel";
 import TestimonialsPanel from "./TestimonialsPanel";
 import WebsiteImagesPanel from "./WebsiteImagesPanel";
+import MembersPanel from "./MembersPanel";
 import SettingsPanel from "./SettingsPanel";
 
 type Tab =
@@ -20,6 +21,7 @@ type Tab =
   | "service-editor"
   | "testimonials"
   | "images"
+  | "members"
   | "settings";
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
@@ -27,6 +29,7 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "services", icon: "🛠️", label: "Products" },
   { id: "testimonials", icon: "💬", label: "Testimonials" },
   { id: "images", icon: "🖼️", label: "Website Images" },
+  { id: "members", icon: "👥", label: "Members" },
   { id: "settings", icon: "⚙️", label: "Settings" },
 ];
 
@@ -171,6 +174,7 @@ export default function AdminPanel() {
     services,
     testimonials,
     websiteImages,
+    members,
     adminPassword,
     addService,
     syncContent,
@@ -274,8 +278,20 @@ export default function AdminPanel() {
           },
         });
     });
+    members.forEach((m) => {
+      if (m.name.toLowerCase().includes(q))
+        results.push({
+          key: `m-${m.id}`,
+          label: m.name,
+          sub: "Member",
+          onSelect: () => {
+            setTab("members");
+            setSearch("");
+          },
+        });
+    });
     return results.slice(0, 8);
-  }, [search, services, testimonials, websiteImages]);
+  }, [search, services, testimonials, websiteImages, members]);
 
   if (!authenticated) {
     return (
@@ -498,6 +514,7 @@ export default function AdminPanel() {
           )}
           {tab === "testimonials" && <TestimonialsPanel />}
           {tab === "images" && <WebsiteImagesPanel />}
+          {tab === "members" && <MembersPanel />}
           {tab === "settings" && <SettingsPanel />}
         </main>
       </div>

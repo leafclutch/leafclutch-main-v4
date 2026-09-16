@@ -38,9 +38,22 @@ export type AdminService = {
 
 export type WebsiteImage = { id: string; name: string; usedIn: string; url: string; updatedAt: string };
 
+export type MemberType = 'founder' | 'team' | 'intern';
+export type Member = {
+  id: string;
+  name: string;
+  role: string;
+  photo: string;
+  linkedin?: string;
+  type: MemberType;
+  order: number;
+  updatedAt: string;
+};
+
 type NewTestimonial = Omit<Testimonial, 'id'>;
 export type NewAdminService = Omit<AdminService, 'id' | 'updatedAt'>;
 export type NewWebsiteImage = Omit<WebsiteImage, 'id' | 'updatedAt'>;
+export type NewMember = Omit<Member, 'id' | 'updatedAt' | 'order'>;
 
 let idCounter = 0;
 export function genId(prefix: string) {
@@ -54,6 +67,7 @@ type AdminContextValue = {
   testimonials: Testimonial[];
   services: AdminService[];
   websiteImages: WebsiteImage[];
+  members: Member[];
   adminPassword: string;
   setAdminPassword: (password: string) => void;
   addTestimonial: (testimonial: NewTestimonial) => void;
@@ -72,6 +86,10 @@ type AdminContextValue = {
   addWebsiteImage: (image: NewWebsiteImage) => void;
   updateWebsiteImage: (id: string, changes: Partial<WebsiteImage>) => void;
   deleteWebsiteImage: (id: string) => void;
+  addMember: (member: NewMember) => void;
+  updateMember: (id: string, changes: Partial<Member>) => void;
+  deleteMember: (id: string) => void;
+  reorderMember: (id: string, direction: 'up' | 'down') => void;
   syncContent: () => Promise<boolean>;
   resetContent: () => void;
 };
@@ -264,6 +282,18 @@ const initialWebsiteImages: WebsiteImage[] = [
   { id: genId('site-img'), name: 'ABC Service Teaser', usedIn: 'Homepage — services row', url: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=500&q=80', updatedAt: today() },
 ];
 
+const initialMembers: Member[] = [
+  { id: genId('member'), name: 'Er. Siddhartha Pathak', role: 'Founder | Director | CTO', photo: '', type: 'founder', order: 0, updatedAt: today() },
+  { id: genId('member'), name: 'Shubham Kumar Deo', role: 'Co-Founder | CEO', photo: '', type: 'founder', order: 1, updatedAt: today() },
+  { id: genId('member'), name: 'Bijay Koirala', role: 'Operation and Marketing Head', photo: '', type: 'team', order: 0, updatedAt: today() },
+  { id: genId('member'), name: 'Shibika Nepal', role: 'HR Manager', photo: '', type: 'team', order: 1, updatedAt: today() },
+  { id: genId('member'), name: 'Saurya Chaudhary', role: 'Cyber Security Head', photo: '', type: 'team', order: 2, updatedAt: today() },
+  { id: genId('member'), name: 'Sandesh Thapa', role: 'Technical Head | Full Stack Developer', photo: '', linkedin: '', type: 'team', order: 3, updatedAt: today() },
+  { id: genId('member'), name: 'Sanjib Pandey', role: 'Full-Stack Developer', photo: '', linkedin: '', type: 'team', order: 4, updatedAt: today() },
+  { id: genId('member'), name: 'Simon Shrestha', role: 'UI/UX Intern', photo: '', linkedin: '', type: 'intern', order: 0, updatedAt: today() },
+  { id: genId('member'), name: 'Yushika Guragain', role: 'UI/UX Intern', photo: '', linkedin: '', type: 'intern', order: 1, updatedAt: today() },
+];
+
 const DEFAULT_PASSWORD = 'leafclutch2024';
 const CONTENT_KEY = 'leafclutch-admin-content';
 const PASSWORD_KEY = 'leafclutch-admin-password';
@@ -324,6 +354,17 @@ const mapSupabaseWebsiteImage = (row: any): WebsiteImage => ({
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
 });
 
+const mapSupabaseMember = (row: any): Member => ({
+  id: row.id ?? genId('member'),
+  name: row.name ?? 'Team Member',
+  role: row.role ?? '',
+  photo: row.photo ?? '',
+  linkedin: row.linkedin ?? undefined,
+  type: row.type === 'founder' || row.type === 'intern' ? row.type : 'team',
+  order: Number(row.sort_order ?? row.order ?? 0),
+  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+});
+
 const readSupabaseContent = async () => {
   if (!isSupabaseConfigured) return null;
 
@@ -333,12 +374,14 @@ const readSupabaseContent = async () => {
     { data: serviceFeaturesData, error: serviceFeaturesError },
     { data: testimonialsData, error: testimonialsError },
     { data: websiteImagesData, error: websiteImagesError },
+    { data: membersData, error: membersError },
   ] = await Promise.all([
     supabase.from('services').select('*'),
     supabase.from('service_images').select('*'),
     supabase.from('service_features').select('*').order('sort_order', { ascending: true }),
     supabase.from('testimonials').select('*'),
     supabase.from('website_images').select('*'),
+    supabase.from('members').select('*').order('sort_order', { ascending: true }),
   ]);
 
   const imagesByService = new Map<string, any[]>();
@@ -371,10 +414,11 @@ const readSupabaseContent = async () => {
     testimonials: !testimonialsError && Array.isArray(testimonialsData) ? testimonialsData.map(mapSupabaseTestimonial) : initialTestimonials,
     services: mappedServices.length > 0 ? mappedServices : initialServices,
     websiteImages: !websiteImagesError && Array.isArray(websiteImagesData) ? websiteImagesData.map(mapSupabaseWebsiteImage) : initialWebsiteImages,
+    members: !membersError && Array.isArray(membersData) ? membersData.map(mapSupabaseMember) : initialMembers,
   };
 };
 
-const syncSupabaseContent = async ({ testimonials, services, websiteImages }: { testimonials: Testimonial[]; services: AdminService[]; websiteImages: WebsiteImage[] }) => {
+const syncSupabaseContent = async ({ testimonials, services, websiteImages, members }: { testimonials: Testimonial[]; services: AdminService[]; websiteImages: WebsiteImage[]; members: Member[] }) => {
   if (!isSupabaseConfigured) return false;
 
   try {
@@ -417,6 +461,17 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages }: { 
       updated_at: new Date(image.updatedAt || Date.now()).toISOString(),
     }));
 
+    const memberRows = members.map(member => ({
+      id: member.id,
+      name: member.name,
+      role: member.role,
+      photo: member.photo || null,
+      linkedin: member.linkedin || null,
+      type: member.type,
+      sort_order: member.order,
+      updated_at: new Date(member.updatedAt || Date.now()).toISOString(),
+    }));
+
     // Upsert only ever inserts/updates the rows we send — rows removed locally (e.g. a
     // deleted service) are never included in the payload, so they'd otherwise stay in
     // the table forever. Diff against what's currently in Supabase and delete the rest.
@@ -436,6 +491,7 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages }: { 
     await pruneRemoved('services', services.map(s => s.id));
     await pruneRemoved('testimonials', testimonials.map(t => t.id));
     await pruneRemoved('website_images', websiteImages.map(w => w.id));
+    await pruneRemoved('members', members.map(m => m.id));
 
     const serviceResult = await supabase.from('services').upsert(serviceRows, { onConflict: 'id' });
     if (serviceResult.error) throw new Error(`services: ${serviceResult.error.message}`);
@@ -445,6 +501,9 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages }: { 
 
     const websiteImageResult = await supabase.from('website_images').upsert(websiteImageRows, { onConflict: 'id' });
     if (websiteImageResult.error) throw new Error(`website_images: ${websiteImageResult.error.message}`);
+
+    const memberResult = await supabase.from('members').upsert(memberRows, { onConflict: 'id' });
+    if (memberResult.error) throw new Error(`members: ${memberResult.error.message}`);
 
     for (const service of services) {
       const existingFeatureIds = await supabase.from('service_features').select('id').eq('service_id', service.id);
@@ -499,6 +558,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [testimonials, setTestimonials] = useState(initialTestimonials);
   const [services, setServices] = useState(initialServices);
   const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
+  const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
   const [hydrated, setHydrated] = useState(false);
 
@@ -511,16 +571,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             setTestimonials(remote.testimonials);
             setServices(remote.services);
             setWebsiteImages(remote.websiteImages);
+            setMembers(remote.members);
           }
         }
 
         if (!isSupabaseConfigured) {
           const saved = window.localStorage.getItem(CONTENT_KEY);
           if (saved) {
-            const content = JSON.parse(saved) as { testimonials?: Testimonial[]; services?: AdminService[]; websiteImages?: WebsiteImage[] };
+            const content = JSON.parse(saved) as { testimonials?: Testimonial[]; services?: AdminService[]; websiteImages?: WebsiteImage[]; members?: Member[] };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
             if (content.websiteImages) setWebsiteImages(content.websiteImages);
+            if (content.members) setMembers(content.members);
           }
         }
         const savedPassword = window.localStorage.getItem(PASSWORD_KEY);
@@ -539,12 +601,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
 
     if (isSupabaseConfigured) {
-      void syncSupabaseContent({ testimonials, services, websiteImages });
+      void syncSupabaseContent({ testimonials, services, websiteImages, members });
       return;
     }
 
-    window.localStorage.setItem(CONTENT_KEY, JSON.stringify({ testimonials, services, websiteImages }));
-  }, [testimonials, services, websiteImages]);
+    window.localStorage.setItem(CONTENT_KEY, JSON.stringify({ testimonials, services, websiteImages, members }));
+  }, [testimonials, services, websiteImages, members]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -628,22 +690,58 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setWebsiteImages(current => current.filter(image => image.id !== id));
   };
 
+  const addMember = (member: NewMember) => {
+    setMembers(current => {
+      const siblingOrders = current.filter(m => m.type === member.type).map(m => m.order);
+      const nextOrder = siblingOrders.length ? Math.max(...siblingOrders) + 1 : 0;
+      return [...current, { ...member, id: genId('member'), order: nextOrder, updatedAt: today() }];
+    });
+  };
+
+  const updateMember = (id: string, changes: Partial<Member>) => {
+    setMembers(current => current.map(member => member.id === id ? { ...member, ...changes, updatedAt: today() } : member));
+  };
+
+  const deleteMember = (id: string) => {
+    setMembers(current => current.filter(member => member.id !== id));
+  };
+
+  const reorderMember = (id: string, direction: 'up' | 'down') => {
+    setMembers(current => {
+      const target = current.find(member => member.id === id);
+      if (!target) return current;
+      const siblings = current.filter(member => member.type === target.type).sort((a, b) => a.order - b.order);
+      const index = siblings.findIndex(member => member.id === id);
+      const swapWith = direction === 'up' ? index - 1 : index + 1;
+      if (swapWith < 0 || swapWith >= siblings.length) return current;
+      const a = siblings[index];
+      const b = siblings[swapWith];
+      return current.map(member => {
+        if (member.id === a.id) return { ...member, order: b.order, updatedAt: today() };
+        if (member.id === b.id) return { ...member, order: a.order, updatedAt: today() };
+        return member;
+      });
+    });
+  };
+
   const resetContent = () => {
     setTestimonials(initialTestimonials);
     setServices(initialServices);
     setWebsiteImages(initialWebsiteImages);
+    setMembers(initialMembers);
   };
 
-  const syncContent = () => syncSupabaseContent({ testimonials, services, websiteImages });
+  const syncContent = () => syncSupabaseContent({ testimonials, services, websiteImages, members });
 
   return (
     <AdminContext.Provider value={{
-      testimonials, services, websiteImages, adminPassword, setAdminPassword,
+      testimonials, services, websiteImages, members, adminPassword, setAdminPassword,
       addTestimonial, updateTestimonial, deleteTestimonial,
       updateService, addService, deleteService,
       addServiceImage, updateServiceImage, deleteServiceImage,
       addFeature, updateFeature, deleteFeature, reorderFeature,
       addWebsiteImage, updateWebsiteImage, deleteWebsiteImage,
+      addMember, updateMember, deleteMember, reorderMember,
       syncContent,
       resetContent,
     }}>
