@@ -7,12 +7,12 @@ import { TestimonialsBoard } from './TestimonialsPanel';
 
 type SubTab = 'basic' | 'images' | 'features' | 'testimonials' | 'settings';
 
-const TABS: { id: SubTab; label: string; icon: string }[] = [
-  { id: 'basic', label: 'Basic Info', icon: '📄' },
-  { id: 'images', label: 'Product Images', icon: '🖼️' },
-  { id: 'features', label: 'Features', icon: '⚙️' },
-  { id: 'testimonials', label: 'Testimonials', icon: '💬' },
-  { id: 'settings', label: 'Settings', icon: '⚙️' },
+const TABS: { id: SubTab; label: string }[] = [
+  { id: 'basic', label: 'Basic Info' },
+  { id: 'images', label: 'Product Images' },
+  { id: 'features', label: 'Features' },
+  { id: 'testimonials', label: 'Testimonials' },
+  { id: 'settings', label: 'Settings' },
 ];
 
 export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: string; onBack: () => void }) {

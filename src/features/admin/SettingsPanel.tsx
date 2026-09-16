@@ -45,14 +45,14 @@ export default function SettingsPanel() {
 
       <div className="bg-white rounded-2xl border border-red-200 p-6 max-w-lg mt-6">
         <h3 className="font-bold text-red-500 mb-1">Danger Zone</h3>
-        <p className="text-sm text-muted-foreground mb-4">Reset all products, testimonials and website images back to the original demo content. This cannot be undone.</p>
+        <p className="text-sm text-muted-foreground mb-4">Reset all products, testimonials and members back to the original demo content. This cannot be undone.</p>
         <button type="button" onClick={() => setConfirmReset(true)} className="border border-red-300 text-red-500 hover:bg-red-50 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">Reset demo content</button>
       </div>
 
       {confirmReset && (
         <ConfirmDialog
           title="Reset demo content?"
-          description="This replaces every product, testimonial and website image with the original demo data. Your admin password is not affected."
+          description="This replaces every product, testimonial and member with the original demo data. Your admin password is not affected."
           confirmLabel="Reset"
           onCancel={() => setConfirmReset(false)}
           onConfirm={() => { resetContent(); setConfirmReset(false); }}

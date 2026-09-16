@@ -36,8 +36,6 @@ export type AdminService = {
   updatedAt: string;
 };
 
-export type WebsiteImage = { id: string; name: string; usedIn: string; url: string; updatedAt: string };
-
 export type MemberType = 'founder' | 'team' | 'intern';
 export type Member = {
   id: string;
@@ -52,7 +50,6 @@ export type Member = {
 
 type NewTestimonial = Omit<Testimonial, 'id'>;
 export type NewAdminService = Omit<AdminService, 'id' | 'updatedAt'>;
-export type NewWebsiteImage = Omit<WebsiteImage, 'id' | 'updatedAt'>;
 export type NewMember = Omit<Member, 'id' | 'updatedAt' | 'order'>;
 
 let idCounter = 0;
@@ -66,7 +63,6 @@ const today = () => new Date().toISOString().slice(0, 10);
 type AdminContextValue = {
   testimonials: Testimonial[];
   services: AdminService[];
-  websiteImages: WebsiteImage[];
   members: Member[];
   adminPassword: string;
   setAdminPassword: (password: string) => void;
@@ -83,9 +79,6 @@ type AdminContextValue = {
   updateFeature: (serviceId: string, featureId: string, changes: Partial<ServiceFeature>) => void;
   deleteFeature: (serviceId: string, featureId: string) => void;
   reorderFeature: (serviceId: string, featureId: string, direction: 'up' | 'down') => void;
-  addWebsiteImage: (image: NewWebsiteImage) => void;
-  updateWebsiteImage: (id: string, changes: Partial<WebsiteImage>) => void;
-  deleteWebsiteImage: (id: string) => void;
   addMember: (member: NewMember) => void;
   updateMember: (id: string, changes: Partial<Member>) => void;
   deleteMember: (id: string) => void;
@@ -277,11 +270,6 @@ const initialTestimonials: Testimonial[] = [
   },
 ];
 
-const initialWebsiteImages: WebsiteImage[] = [
-  { id: genId('site-img'), name: 'Black Service Teaser', usedIn: 'Homepage — services row', url: 'https://images.unsplash.com/photo-1580927752452-89d86da3fa0a?auto=format&fit=crop&w=500&q=80', updatedAt: today() },
-  { id: genId('site-img'), name: 'ABC Service Teaser', usedIn: 'Homepage — services row', url: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=500&q=80', updatedAt: today() },
-];
-
 const initialMembers: Member[] = [
   { id: genId('member'), name: 'Er. Siddhartha Pathak', role: 'Founder | Director | CTO', photo: '', type: 'founder', order: 0, updatedAt: today() },
   { id: genId('member'), name: 'Shubham Kumar Deo', role: 'Co-Founder | CEO', photo: '', type: 'founder', order: 1, updatedAt: today() },
@@ -346,14 +334,6 @@ const mapSupabaseTestimonial = (row: any): Testimonial => ({
   status: row.status === 'draft' ? 'draft' : 'published',
 });
 
-const mapSupabaseWebsiteImage = (row: any): WebsiteImage => ({
-  id: row.id ?? genId('site-img'),
-  name: row.name ?? 'Website Image',
-  usedIn: row.used_in ?? row.usedIn ?? '',
-  url: row.url ?? '',
-  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
-});
-
 const mapSupabaseMember = (row: any): Member => ({
   id: row.id ?? genId('member'),
   name: row.name ?? 'Team Member',
@@ -373,14 +353,12 @@ const readSupabaseContent = async () => {
     { data: serviceImagesData, error: serviceImagesError },
     { data: serviceFeaturesData, error: serviceFeaturesError },
     { data: testimonialsData, error: testimonialsError },
-    { data: websiteImagesData, error: websiteImagesError },
     { data: membersData, error: membersError },
   ] = await Promise.all([
     supabase.from('services').select('*'),
     supabase.from('service_images').select('*'),
     supabase.from('service_features').select('*').order('sort_order', { ascending: true }),
     supabase.from('testimonials').select('*'),
-    supabase.from('website_images').select('*'),
     supabase.from('members').select('*').order('sort_order', { ascending: true }),
   ]);
 
@@ -413,12 +391,11 @@ const readSupabaseContent = async () => {
   return {
     testimonials: !testimonialsError && Array.isArray(testimonialsData) ? testimonialsData.map(mapSupabaseTestimonial) : initialTestimonials,
     services: mappedServices.length > 0 ? mappedServices : initialServices,
-    websiteImages: !websiteImagesError && Array.isArray(websiteImagesData) ? websiteImagesData.map(mapSupabaseWebsiteImage) : initialWebsiteImages,
     members: !membersError && Array.isArray(membersData) ? membersData.map(mapSupabaseMember) : initialMembers,
   };
 };
 
-const syncSupabaseContent = async ({ testimonials, services, websiteImages, members }: { testimonials: Testimonial[]; services: AdminService[]; websiteImages: WebsiteImage[]; members: Member[] }) => {
+const syncSupabaseContent = async ({ testimonials, services, members }: { testimonials: Testimonial[]; services: AdminService[]; members: Member[] }) => {
   if (!isSupabaseConfigured) return false;
 
   try {
@@ -453,14 +430,6 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages, memb
       status: item.status,
     }));
 
-    const websiteImageRows = websiteImages.map(image => ({
-      id: image.id,
-      name: image.name,
-      used_in: image.usedIn,
-      url: image.url,
-      updated_at: new Date(image.updatedAt || Date.now()).toISOString(),
-    }));
-
     const memberRows = members.map(member => ({
       id: member.id,
       name: member.name,
@@ -490,7 +459,6 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages, memb
 
     await pruneRemoved('services', services.map(s => s.id));
     await pruneRemoved('testimonials', testimonials.map(t => t.id));
-    await pruneRemoved('website_images', websiteImages.map(w => w.id));
     await pruneRemoved('members', members.map(m => m.id));
 
     const serviceResult = await supabase.from('services').upsert(serviceRows, { onConflict: 'id' });
@@ -498,9 +466,6 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages, memb
 
     const testimonialResult = await supabase.from('testimonials').upsert(testimonialRows, { onConflict: 'id' });
     if (testimonialResult.error) throw new Error(`testimonials: ${testimonialResult.error.message}`);
-
-    const websiteImageResult = await supabase.from('website_images').upsert(websiteImageRows, { onConflict: 'id' });
-    if (websiteImageResult.error) throw new Error(`website_images: ${websiteImageResult.error.message}`);
 
     const memberResult = await supabase.from('members').upsert(memberRows, { onConflict: 'id' });
     if (memberResult.error) throw new Error(`members: ${memberResult.error.message}`);
@@ -557,7 +522,6 @@ const syncSupabaseContent = async ({ testimonials, services, websiteImages, memb
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [testimonials, setTestimonials] = useState(initialTestimonials);
   const [services, setServices] = useState(initialServices);
-  const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
   const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
   const [hydrated, setHydrated] = useState(false);
@@ -570,7 +534,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           if (remote) {
             setTestimonials(remote.testimonials);
             setServices(remote.services);
-            setWebsiteImages(remote.websiteImages);
             setMembers(remote.members);
           }
         }
@@ -578,10 +541,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         if (!isSupabaseConfigured) {
           const saved = window.localStorage.getItem(CONTENT_KEY);
           if (saved) {
-            const content = JSON.parse(saved) as { testimonials?: Testimonial[]; services?: AdminService[]; websiteImages?: WebsiteImage[]; members?: Member[] };
+            const content = JSON.parse(saved) as { testimonials?: Testimonial[]; services?: AdminService[]; members?: Member[] };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
-            if (content.websiteImages) setWebsiteImages(content.websiteImages);
             if (content.members) setMembers(content.members);
           }
         }
@@ -601,12 +563,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (!hydrated) return;
 
     if (isSupabaseConfigured) {
-      void syncSupabaseContent({ testimonials, services, websiteImages, members });
+      void syncSupabaseContent({ testimonials, services, members });
       return;
     }
 
-    window.localStorage.setItem(CONTENT_KEY, JSON.stringify({ testimonials, services, websiteImages, members }));
-  }, [testimonials, services, websiteImages, members]);
+    window.localStorage.setItem(CONTENT_KEY, JSON.stringify({ testimonials, services, members }));
+  }, [testimonials, services, members]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -678,18 +640,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const addWebsiteImage = (image: NewWebsiteImage) => {
-    setWebsiteImages(current => [...current, { ...image, id: genId('site-img'), updatedAt: today() }]);
-  };
-
-  const updateWebsiteImage = (id: string, changes: Partial<WebsiteImage>) => {
-    setWebsiteImages(current => current.map(image => image.id === id ? { ...image, ...changes, updatedAt: today() } : image));
-  };
-
-  const deleteWebsiteImage = (id: string) => {
-    setWebsiteImages(current => current.filter(image => image.id !== id));
-  };
-
   const addMember = (member: NewMember) => {
     setMembers(current => {
       const siblingOrders = current.filter(m => m.type === member.type).map(m => m.order);
@@ -727,20 +677,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const resetContent = () => {
     setTestimonials(initialTestimonials);
     setServices(initialServices);
-    setWebsiteImages(initialWebsiteImages);
     setMembers(initialMembers);
   };
 
-  const syncContent = () => syncSupabaseContent({ testimonials, services, websiteImages, members });
+  const syncContent = () => syncSupabaseContent({ testimonials, services, members });
 
   return (
     <AdminContext.Provider value={{
-      testimonials, services, websiteImages, members, adminPassword, setAdminPassword,
+      testimonials, services, members, adminPassword, setAdminPassword,
       addTestimonial, updateTestimonial, deleteTestimonial,
       updateService, addService, deleteService,
       addServiceImage, updateServiceImage, deleteServiceImage,
       addFeature, updateFeature, deleteFeature, reorderFeature,
-      addWebsiteImage, updateWebsiteImage, deleteWebsiteImage,
       addMember, updateMember, deleteMember, reorderMember,
       syncContent,
       resetContent,

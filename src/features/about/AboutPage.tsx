@@ -151,7 +151,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-center text-3xl lg:text-4xl font-extrabold text-[#072069] reveal">Our Identity,<br />Vision and Values</h2>
 
-          <div className="about-identity-banner reveal mt-10">
+          <div className="about-identity-banner reveal">
             {values.map(value => (
               <div key={value.label} className="about-identity-value">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">{value.icon}</svg>

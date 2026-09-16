@@ -11,7 +11,6 @@ drop table if exists public.service_images cascade;
 drop table if exists public.service_features cascade;
 drop table if exists public.services cascade;
 drop table if exists public.testimonials cascade;
-drop table if exists public.website_images cascade;
 drop table if exists public.site_settings cascade;
 drop table if exists public.members cascade;
 
@@ -68,16 +67,6 @@ create table public.testimonials (
   status text not null default 'published' check (status in ('published', 'draft'))
 );
 
--- Sitewide images not tied to any single product (e.g. homepage teaser photos).
--- Managed from the admin panel's "Website Images" tab.
-create table public.website_images (
-  id text primary key,
-  name text not null,
-  used_in text,                                 -- free-text note on where this image is used
-  url text not null,
-  updated_at timestamptz not null default now()
-);
-
 -- Generic key/value store for simple site settings the admin panel might save.
 create table public.site_settings (
   key text primary key,
@@ -103,7 +92,6 @@ alter table public.services enable row level security;
 alter table public.service_images enable row level security;
 alter table public.service_features enable row level security;
 alter table public.testimonials enable row level security;
-alter table public.website_images enable row level security;
 alter table public.site_settings enable row level security;
 alter table public.members enable row level security;
 
@@ -122,10 +110,6 @@ create policy "Authenticated users manage service features" on public.service_fe
 -- Testimonials: the public only sees "published" ones; admins (logged in) can see drafts too and manage all of them.
 create policy "Public can read published testimonials" on public.testimonials for select using (status = 'published' or auth.role() = 'authenticated');
 create policy "Authenticated users manage testimonials" on public.testimonials for all to authenticated using (true) with check (true);
-
--- Website images: same rule — public can view, only admins can manage.
-create policy "Public can read website images" on public.website_images for select using (true);
-create policy "Authenticated users manage website images" on public.website_images for all to authenticated using (true) with check (true);
 
 -- Site settings: same rule — public can view, only admins can manage.
 create policy "Public can read site settings" on public.site_settings for select using (true);
