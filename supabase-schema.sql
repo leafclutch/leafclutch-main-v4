@@ -10,6 +10,7 @@ create extension if not exists "pgcrypto";
 drop table if exists public.service_images cascade;
 drop table if exists public.service_features cascade;
 drop table if exists public.services cascade;
+drop table if exists public.company_services cascade;
 drop table if exists public.testimonials cascade;
 drop table if exists public.website_images cascade;
 drop table if exists public.site_settings cascade;
@@ -98,8 +99,27 @@ create table public.members (
   updated_at timestamptz not null default now()
 );
 
+-- Company Services (Our Services: Software Development, Digital Marketing, etc.)
+create table public.company_services (
+  id text primary key,
+  title text not null,
+  short_description text not null default '',
+  full_description text not null default '',
+  icon text not null default '💼',
+  icon_image text,
+  cover_image text,
+  features jsonb not null default '[]'::jsonb,
+  benefits jsonb not null default '[]'::jsonb,
+  technologies jsonb not null default '[]'::jsonb,
+  workflow jsonb not null default '[]'::jsonb,
+  status text not null default 'active' check (status in ('active', 'draft')),
+  sort_order integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
 -- Turn on Row Level Security for every table — without policies below, this blocks all access by default.
 alter table public.services enable row level security;
+alter table public.company_services enable row level security;
 alter table public.service_images enable row level security;
 alter table public.service_features enable row level security;
 alter table public.testimonials enable row level security;
@@ -110,6 +130,10 @@ alter table public.members enable row level security;
 -- Products: anyone can view them (public website); only logged-in admins can add/edit/delete.
 create policy "Public can read services" on public.services for select using (true);
 create policy "Authenticated users manage services" on public.services for all to authenticated using (true) with check (true);
+
+-- Company Services: public can read, only admins can manage.
+create policy "Public can read company services" on public.company_services for select using (true);
+create policy "Authenticated users manage company services" on public.company_services for all to authenticated using (true) with check (true);
 
 -- Product gallery images: same rule — public can view, only admins can manage.
 create policy "Public can read service images" on public.service_images for select using (true);

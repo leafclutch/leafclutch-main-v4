@@ -47,6 +47,7 @@ export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: s
     updateService(service.id, {
       title: draft.title, label: draft.label, heading: draft.heading,
       description: draft.description, status: draft.status, iconImage: draft.iconImage,
+      productUrl: draft.productUrl,
     });
     setSaved(true);
   };
@@ -135,6 +136,14 @@ function BasicInfoTab({ draft, setField }: { draft: AdminService; setField: <K e
         <Field label="Small Label (Top Text)" hint="Shown above the main heading, e.g. RESTAURANT MANAGEMENT SYSTEM"><input value={draft.label} onChange={e => setField('label', e.target.value)} className="admin-input" /></Field>
         <Field label="Main Heading" hint="The big headline at the top of the page"><input value={draft.heading} onChange={e => setField('heading', e.target.value)} className="admin-input" /></Field>
         <Field label="Description"><textarea value={draft.description} onChange={e => setField('description', e.target.value)} rows={3} className="admin-input resize-none" /></Field>
+        <Field label="Product URL" hint="Shown in the browser address bar on the home page. Leave empty to fall back to leafclutchtech.com/{slug}.">
+          <input
+            value={draft.productUrl ?? ''}
+            onChange={e => setField('productUrl', e.target.value)}
+            className="admin-input"
+            placeholder="https://hrestrosewa.leafclutch.com.np/"
+          />
+        </Field>
         <Field label="Status">
           <select value={draft.status} onChange={e => setField('status', e.target.value as AdminService['status'])} className="admin-input">
             <option value="active">Published</option>

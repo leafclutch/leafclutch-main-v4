@@ -12,6 +12,23 @@ export function Field({ label, children, hint }: { label: string; children: Reac
   );
 }
 
+/**
+ * Like Field, but renders a <div> instead of a <label>.
+ *
+ * Use this whenever the group holds more than one control. A <label> may only
+ * wrap a single labelable element — nest several and the browser routes every
+ * click inside it to the first one, so buttons and checkboxes stop responding.
+ */
+export function FieldGroup({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+  return (
+    <div className="block">
+      <span className="block text-xs font-semibold text-foreground mb-1.5">{label}</span>
+      {children}
+      {hint && <span className="block text-[11px] text-muted-foreground mt-1">{hint}</span>}
+    </div>
+  );
+}
+
 export function StatusPill({ active, activeLabel = 'Published', inactiveLabel = 'Coming soon' }: { active: boolean; activeLabel?: string; inactiveLabel?: string }) {
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${active ? 'bg-[#3BE3A0]/15 text-[#0aab77]' : 'bg-[#F3F4F7] text-[#676F7E]'}`}>

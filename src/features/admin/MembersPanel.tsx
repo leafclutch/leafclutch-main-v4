@@ -2,7 +2,16 @@
 
 import { useState } from 'react';
 import { useAdmin, type Member, type MemberType, type NewMember } from '@/app/context/AdminContext';
-import { ConfirmDialog, Field, ImageDropzone, Modal } from './shared';
+import SocialIcon from '@/app/components/ui/SocialIcon';
+import {
+  MEMBER_LINK_PLATFORMS,
+  createMemberLink,
+  newMemberLinkId,
+  platformMeta,
+  type MemberLink,
+  type MemberLinkPlatform,
+} from '@/lib/memberLinks';
+import { ConfirmDialog, Field, FieldGroup, ImageDropzone, Modal } from './shared';
 
 const GROUPS: { type: MemberType; title: string; hint: string }[] = [
   { type: 'founder', title: 'Founders', hint: 'Shown in the Founders section' },
@@ -10,19 +19,115 @@ const GROUPS: { type: MemberType; title: string; hint: string }[] = [
   { type: 'intern', title: 'Interns', hint: 'Shown in the Our Intern Team section' },
 ];
 
+/** Builds the starting link list, upgrading members saved before this editor existed. */
+function initialLinks(member?: Member): MemberLink[] {
+  if (member?.links?.length) return member.links.map(link => ({ ...link }));
+  if (member?.linkedin) {
+    return [{ id: newMemberLinkId(), platform: 'linkedin', url: member.linkedin, visible: true }];
+  }
+  return [];
+}
+
+function LinkRow({ link, onChange, onRemove }: { link: MemberLink; onChange: (next: MemberLink) => void; onRemove: () => void }) {
+  return (
+    <div className="rounded-xl border border-border bg-[#F8FAFC] p-3 space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white border border-border text-primary">
+          <SocialIcon platform={link.platform} />
+        </span>
+        <div className="w-36 shrink-0">
+          <select
+            value={link.platform}
+            onChange={e => onChange({ ...link, platform: e.target.value as MemberLinkPlatform })}
+            className="admin-input"
+            aria-label="Link type"
+          >
+            {MEMBER_LINK_PLATFORMS.map(option => (
+              <option key={option.key} value={option.key}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-0 flex-1 basis-48">
+          <input
+            value={link.url}
+            onChange={e => onChange({ ...link, url: e.target.value })}
+            className="admin-input"
+            placeholder={platformMeta(link.platform).placeholder}
+            aria-label={`${platformMeta(link.platform).label} value`}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 px-2 text-red-400 hover:text-red-600 text-lg leading-none"
+          aria-label="Remove link"
+          title="Remove link"
+        >
+          ×
+        </button>
+      </div>
+
+      {link.platform === 'other' && (
+        <input
+          value={link.label ?? ''}
+          onChange={e => onChange({ ...link, label: e.target.value })}
+          className="admin-input"
+          placeholder="Button label — e.g. Portfolio, Behance, Dribbble"
+          aria-label="Custom link label"
+        />
+      )}
+
+      <div className="flex items-center gap-2">
+        <input
+          id={`link-visible-${link.id}`}
+          type="checkbox"
+          checked={link.visible}
+          onChange={e => onChange({ ...link, visible: e.target.checked })}
+          className="h-3.5 w-3.5 accent-[#0EA5E9] cursor-pointer"
+        />
+        <label
+          htmlFor={`link-visible-${link.id}`}
+          className="text-xs font-medium text-muted-foreground cursor-pointer select-none"
+        >
+          {link.visible
+            ? 'Visible on the website'
+            : 'Hidden — saved, but not shown on the website'}
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: Member; defaultType: MemberType; onClose: () => void; onSave: (data: NewMember) => void }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [role, setRole] = useState(initial?.role ?? '');
   const [photo, setPhoto] = useState(initial?.photo ?? '');
-  const [linkedin, setLinkedin] = useState(initial?.linkedin ?? '');
+  const [links, setLinks] = useState<MemberLink[]>(() => initialLinks(initial));
   const [type, setType] = useState<MemberType>(initial?.type ?? defaultType);
+
+  const updateLink = (id: string, next: MemberLink) =>
+    setLinks(current => current.map(link => (link.id === id ? next : link)));
+  const removeLink = (id: string) =>
+    setLinks(current => current.filter(link => link.id !== id));
+  const addLink = () => setLinks(current => [...current, createMemberLink()]);
 
   return (
     <Modal title={initial ? 'Edit Member' : 'Add Member'} onClose={onClose}>
       <form
         onSubmit={event => {
           event.preventDefault();
-          onSave({ name, role, photo, linkedin: linkedin || undefined, type });
+          // Drop rows the user left blank so empty buttons never reach the site.
+          const cleaned = links
+            .filter(link => link.url.trim() !== '')
+            .map(link => ({ ...link, url: link.url.trim() }));
+          onSave({
+            name,
+            role,
+            photo,
+            links: cleaned,
+            linkedin: cleaned.find(link => link.platform === 'linkedin')?.url,
+            type,
+          });
         }}
         className="space-y-4"
       >
@@ -35,9 +140,29 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
         <Field label="Role / Designation *">
           <input required value={role} onChange={e => setRole(e.target.value)} className="admin-input" placeholder="e.g. Founder | Director | CTO" />
         </Field>
-        <Field label="LinkedIn URL" hint="Optional — shown as a LinkedIn link on the card">
-          <input value={linkedin} onChange={e => setLinkedin(e.target.value)} className="admin-input" placeholder="https://www.linkedin.com/in/…" />
-        </Field>
+
+        <FieldGroup label="Contact & Social Links" hint="Add as many as you like. Untick a link to keep it on record without showing it on the website.">
+          <div className="space-y-2">
+            {links.length === 0 ? (
+              <p className="text-xs text-muted-foreground py-3 text-center border border-dashed border-border rounded-xl">
+                No links yet.
+              </p>
+            ) : (
+              links.map(link => (
+                <LinkRow
+                  key={link.id}
+                  link={link}
+                  onChange={next => updateLink(link.id, next)}
+                  onRemove={() => removeLink(link.id)}
+                />
+              ))
+            )}
+            <button type="button" onClick={addLink} className="text-accent hover:text-[#072069] text-xs font-semibold">
+              + Add link
+            </button>
+          </div>
+        </FieldGroup>
+
         <Field label="Group">
           <select value={type} onChange={e => setType(e.target.value as MemberType)} className="admin-input">
             <option value="founder">Founder</option>
@@ -51,6 +176,26 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
         </div>
       </form>
     </Modal>
+  );
+}
+
+/** Small "2 visible · 1 hidden" line under each name in the list. */
+function MemberLinkSummary({ member }: { member: Member }) {
+  const links = member.links ?? [];
+  if (links.length === 0) return null;
+  const visible = links.filter(link => link.visible && link.url.trim() !== '');
+  const hidden = links.length - visible.length;
+
+  return (
+    <p className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground">
+      {visible.map(link => (
+        <span key={link.id} className="text-primary" title={platformMeta(link.platform).label}>
+          <SocialIcon platform={link.platform} className="h-4 w-4" />
+        </span>
+      ))}
+      {visible.length === 0 && <span>No visible links</span>}
+      {hidden > 0 && <span className="ml-0.5">· {hidden} hidden</span>}
+    </p>
   );
 }
 
@@ -81,6 +226,7 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-foreground truncate">{member.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{member.role}</p>
+                <MemberLinkSummary member={member} />
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button type="button" disabled={index === 0} onClick={() => onReorder(member.id, 'up')} className="disabled:opacity-25 hover:text-accent leading-none px-1">▲</button>

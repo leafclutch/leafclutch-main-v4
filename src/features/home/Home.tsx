@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
 import { useAdmin } from "@/app/context/AdminContext";
+import StatIcon from "@/app/components/ui/StatIcon";
 const logoImg = "/Mlogo.png";
 
 const services = [
@@ -283,7 +284,14 @@ export default function Home() {
   const servicesScrollBoxRef = useRef<HTMLDivElement>(null);
   const servicePageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeService, setActiveService] = useState(0);
-  const { services: managedServices } = useAdmin();
+  const { services: managedServices, stats } = useAdmin();
+
+  // Shared company metrics, managed in Admin > Statistics. The hero bar and the
+  // "Our Journey" cards both read this, so one edit updates both.
+  const homeStats = stats
+    .filter((s) => s.status === "active" && s.context !== "about")
+    .sort((a, b) => a.order - b.order)
+    .slice(0, 4);
   const serviceCards = managedServices.map((service, index) => {
     const fallback = services.find((item) => item.slug === service.id);
     return {
@@ -305,6 +313,12 @@ export default function Home() {
         </>
       ),
       comingSoon: service.status === "coming_soon",
+      // Set per product in Admin > Products > Edit Product > Product URL.
+      // Falls back to the old hardcoded path when it hasn't been filled in.
+      displayUrl: (service.productUrl || "").trim()
+        ? (service.productUrl as string).trim().replace(/^https?:\/\//i, "")
+        : `leafclutchtech.com/${service.id}`,
+      productUrl: (service.productUrl || "").trim(),
     };
   });
 
@@ -579,90 +593,17 @@ export default function Home() {
         <div className="hero2-stats-wrap relative z-10">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="hero2-stats-bar">
-              <div className="hero2-stat">
-                <span className="hero2-stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                    <path d="M16 3.13a4 4 0 010 7.75" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>100+</strong>
-                  <span>Happy Clients</span>
+              {homeStats.map((stat) => (
+                <div className="hero2-stat" key={stat.id}>
+                  <span className="hero2-stat-icon">
+                    <StatIcon icon={stat.icon} className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <strong>{stat.value}</strong>
+                    <span>{stat.label}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="hero2-stat">
-                <span className="hero2-stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                    <path d="M2 17l10 5 10-5" />
-                    <path d="M2 12l10 5 10-5" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>50+</strong>
-                  <span>Projects Delivered</span>
-                </div>
-              </div>
-
-              <div className="hero2-stat">
-                <span className="hero2-stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M12 7v5l3.5 2" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>5+</strong>
-                  <span>Years Experience Team</span>
-                </div>
-              </div>
-              <div className="hero2-stat">
-                <span className="hero2-stat-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.8}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                </span>
-                <div>
-                  <strong>99.9%</strong>
-                  <span>Service Uptime</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -694,95 +635,20 @@ export default function Home() {
               </p>
 
               <div className="grid grid-cols-2 gap-4 mt-8">
-                <div className="bg-white rounded-2xl p-5 shadow-sm">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-4.5 h-4.5"
-                    >
-                      <circle cx="12" cy="12" r="9" />
-                      <path d="M12 7v5l3.5 2" />
-                    </svg>
-                  </span>
-                  <p className="text-xl font-extrabold text-[#0F1729]">
-                    5+ Years
-                  </p>
-                  <p className="text-xs text-[#676F7E] uppercase tracking-wide mt-1">
-                    Industry Experience TEAM
-                  </p>
-                </div>
-                <div className="bg-white rounded-2xl p-5 shadow-sm">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-4.5 h-4.5"
-                    >
-                      <circle cx="12" cy="12" r="9" />
-                      <circle cx="12" cy="12" r="4" />
-                      <circle cx="12" cy="12" r="0.5" />
-                    </svg>
-                  </span>
-                  <p className="text-xl font-extrabold text-[#0F1729]">
-                    50+ Projects
-                  </p>
-                  <p className="text-xs text-[#676F7E] uppercase tracking-wide mt-1">
-                    Successfully Delivered
-                  </p>
-                </div>
-                <div className="bg-white rounded-2xl p-5 shadow-sm">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-4.5 h-4.5"
-                    >
-                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                      <path d="M16 3.13a4 4 0 010 7.75" />
-                    </svg>
-                  </span>
-                  <p className="text-xl font-extrabold text-[#0F1729]">
-                    50+ Clients
-                  </p>
-                  <p className="text-xs text-[#676F7E] uppercase tracking-wide mt-1">
-                    Trust Our Solutions
-                  </p>
-                </div>
-                <div className="bg-white rounded-2xl p-5 shadow-sm">
-                  <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="w-4.5 h-4.5"
-                    >
-                      <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" />
-                      <path d="M9 12l2 2 4-4" />
-                    </svg>
-                  </span>
-                  <p className="text-xl font-extrabold text-[#0F1729]">99.9%</p>
-                  <p className="text-xs text-[#676F7E] uppercase tracking-wide mt-1">
-                    Service Uptime
-                  </p>
-                </div>
+                {homeStats.map((stat) => (
+                  <div className="bg-white rounded-2xl p-5 shadow-sm" key={stat.id}>
+                    <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
+                      <StatIcon icon={stat.icon} className="w-4.5 h-4.5" />
+                    </span>
+                    <p className="text-xl font-extrabold text-[#0F1729]">
+                      {stat.value}
+                      {stat.unit ? ` ${stat.unit}` : ""}
+                    </p>
+                    <p className="text-xs text-[#676F7E] uppercase tracking-wide mt-1">
+                      {stat.caption || stat.label}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -803,6 +669,7 @@ export default function Home() {
             </div>
           </div>
 
+          <div className="services-layout">
           <div className="services-tab-row reveal-left">
             {serviceCards.map((s, i) => (
               <button
@@ -855,7 +722,8 @@ export default function Home() {
                             </svg>
                           )}
                         </span>
-                        <span className="services-story-pill">{s.label}</span>
+                        {/* Product name beside the logo, not the small label. */}
+                        <span className="services-story-pill">{s.name}</span>
                       </div>
                       {s.comingSoon && (
                         <span className="services-story-soon">Coming Soon</span>
@@ -889,7 +757,7 @@ export default function Home() {
                               <rect x="5" y="11" width="14" height="9" rx="2" />
                               <path d="M8 11V7a4 4 0 018 0v4" />
                             </svg>
-                            leafclutchtech.com/{s.slug}
+                            {s.displayUrl}
                           </span>
                         </div>
                         <div className="services-story-browser-body">
@@ -919,6 +787,7 @@ export default function Home() {
                 />
               ))}
             </div>
+          </div>
           </div>
         </div>
       </section>

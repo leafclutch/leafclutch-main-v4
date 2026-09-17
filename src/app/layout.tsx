@@ -13,7 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
+      {/* Browser extensions (Grammarly, password managers) add attributes to
+          <body> before React hydrates, which otherwise logs a mismatch warning. */}
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

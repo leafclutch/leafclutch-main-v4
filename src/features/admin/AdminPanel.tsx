@@ -13,23 +13,31 @@ import ServiceEditorPanel from "./ServiceEditorPanel";
 import TestimonialsPanel from "./TestimonialsPanel";
 import WebsiteImagesPanel from "./WebsiteImagesPanel";
 import MembersPanel from "./MembersPanel";
+import StatsPanel from "./StatsPanel";
 import SettingsPanel from "./SettingsPanel";
+import CompanyServicesPanel from "./CompanyServicesPanel";
+import CompanyServiceEditorPanel from "./CompanyServiceEditorPanel";
 
 type Tab =
   | "dashboard"
+  | "company-services"
+  | "company-service-editor"
   | "services"
   | "service-editor"
   | "testimonials"
   | "images"
   | "members"
+  | "stats"
   | "settings";
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "dashboard", icon: "📊", label: "Dashboard" },
-  { id: "services", icon: "🛠️", label: "Products" },
+  { id: "company-services", icon: "💼", label: "Our Services" },
+  { id: "services", icon: "🛠️", label: "Our Products" },
   { id: "testimonials", icon: "💬", label: "Testimonials" },
   { id: "images", icon: "🖼️", label: "Website Images" },
   { id: "members", icon: "👥", label: "Members" },
+  { id: "stats", icon: "📈", label: "Statistics" },
   { id: "settings", icon: "⚙️", label: "Settings" },
 ];
 
@@ -172,6 +180,7 @@ function NewServiceForm({
 export default function AdminPanel() {
   const {
     services,
+    companyServices,
     testimonials,
     websiteImages,
     members,
@@ -186,6 +195,9 @@ export default function AdminPanel() {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [servicesExpanded, setServicesExpanded] = useState(true);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editingCompanyServiceId, setEditingCompanyServiceId] = useState<
+    string | null
+  >(null);
   const [newServiceOpen, setNewServiceOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -238,6 +250,22 @@ export default function AdminPanel() {
       sub: string;
       onSelect: () => void;
     }[] = [];
+    companyServices.forEach((cs) => {
+      if (
+        cs.title.toLowerCase().includes(q) ||
+        cs.shortDescription.toLowerCase().includes(q)
+      )
+        results.push({
+          key: `cs-${cs.id}`,
+          label: cs.title,
+          sub: "Service",
+          onSelect: () => {
+            setEditingCompanyServiceId(cs.id);
+            setTab("company-service-editor");
+            setSearch("");
+          },
+        });
+    });
     services.forEach((s) => {
       if (s.title.toLowerCase().includes(q))
         results.push({
@@ -515,6 +543,7 @@ export default function AdminPanel() {
           {tab === "testimonials" && <TestimonialsPanel />}
           {tab === "images" && <WebsiteImagesPanel />}
           {tab === "members" && <MembersPanel />}
+          {tab === "stats" && <StatsPanel />}
           {tab === "settings" && <SettingsPanel />}
         </main>
       </div>

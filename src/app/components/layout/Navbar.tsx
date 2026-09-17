@@ -141,6 +141,8 @@ export default function Navbar() {
     return {
       name: service.title,
       slug: service.id,
+      // "Small Label (Top Text)" from Admin > Products > Edit Product.
+      label: service.label || "",
       desc:
         service.description ||
         fallback?.desc ||
@@ -419,7 +421,9 @@ export default function Navbar() {
                     <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
                       {s.name}
                     </span>
-                    <span className="mega-dropdown-item-desc">{s.desc}</span>
+                    <span className="mega-dropdown-item-desc">
+                      {s.label || s.desc}
+                    </span>
                   </span>
                 </Link>
               ))}
