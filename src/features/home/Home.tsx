@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
-import { useAdmin, byDisplayOrder, type Stat } from "@/app/context/AdminContext";
+import {
+  useAdmin,
+  byDisplayOrder,
+  type Stat,
+} from "@/app/context/AdminContext";
 import StatIcon from "@/app/components/ui/StatIcon";
 import HomeServices from "./HomeServices";
 import ProcessSection from "@/app/components/ui/ProcessSection";
@@ -189,7 +193,6 @@ const provinceHubs = [
   },
 ];
 
-
 export default function Home() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(true);
   const whyIntroRef = useRef<HTMLDivElement>(null);
@@ -233,34 +236,34 @@ export default function Home() {
   const serviceCards = [...managedServices]
     .sort(byDisplayOrder)
     .map((service, index) => {
-    const fallback = services.find((item) => item.slug === service.id);
-    return {
-      name: service.title,
-      slug: service.id,
-      label: service.label || fallback?.name || "Our Products",
-      heading: service.heading || service.title,
-      desc:
-        service.description ||
-        fallback?.desc ||
-        "Explore this solution from Leafclutch Technologies.",
-      color: fallback?.color ?? ["#0EA5E9", "#25D366", "#3B82F6"][index % 3],
-      image: service.heroImage || fallback?.image || "",
-      iconImage: service.iconImage || "",
-      icon: fallback?.icon ?? (
-        <>
-          <rect x="3" y="4" width="18" height="16" rx="2" />
-          <path d="M7 9h10M7 13h7" />
-        </>
-      ),
-      comingSoon: service.status === "coming_soon",
-      // Set per product in Admin > Products > Edit Product > Product URL.
-      // Falls back to the old hardcoded path when it hasn't been filled in.
-      displayUrl: (service.productUrl || "").trim()
-        ? (service.productUrl as string).trim().replace(/^https?:\/\//i, "")
-        : `leafclutchtech.com/${service.id}`,
-      productUrl: (service.productUrl || "").trim(),
-    };
-  });
+      const fallback = services.find((item) => item.slug === service.id);
+      return {
+        name: service.title,
+        slug: service.id,
+        label: service.label || fallback?.name || "Our Products",
+        heading: service.heading || service.title,
+        desc:
+          service.description ||
+          fallback?.desc ||
+          "Explore this solution from Leafclutch Technologies.",
+        color: fallback?.color ?? ["#0EA5E9", "#25D366", "#3B82F6"][index % 3],
+        image: service.heroImage || fallback?.image || "",
+        iconImage: service.iconImage || "",
+        icon: fallback?.icon ?? (
+          <>
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M7 9h10M7 13h7" />
+          </>
+        ),
+        comingSoon: service.status === "coming_soon",
+        // Set per product in Admin > Products > Edit Product > Product URL.
+        // Falls back to the old hardcoded path when it hasn't been filled in.
+        displayUrl: (service.productUrl || "").trim()
+          ? (service.productUrl as string).trim().replace(/^https?:\/\//i, "")
+          : `leafclutchtech.com/${service.id}`,
+        productUrl: (service.productUrl || "").trim(),
+      };
+    });
 
   const scrollToServices = () => {
     document
@@ -556,7 +559,7 @@ export default function Home() {
             <div ref={achievementImageRef} className="achievement-image-wrap">
               <img
                 src="/client.png"
-                alt="200+ happy Leafclutch clients"
+                alt="100+ happy Leafclutch clients"
                 className="w-full h-auto rounded-3xl shadow-lg"
               />
             </div>
@@ -576,7 +579,10 @@ export default function Home() {
 
               <div className="grid grid-cols-2 gap-4 mt-8">
                 {homeStats.map((stat) => (
-                  <div className="bg-white rounded-2xl p-5 shadow-sm" key={stat.id}>
+                  <div
+                    className="bg-white rounded-2xl p-5 shadow-sm"
+                    key={stat.id}
+                  >
                     <span className="flex items-center justify-center w-9 h-9 rounded-full bg-[#EEF4FF] text-[#072069] mb-3">
                       <StatIcon icon={stat.icon} className="w-4.5 h-4.5" />
                     </span>
@@ -610,124 +616,132 @@ export default function Home() {
           </div>
 
           <div className="services-layout">
-          <div className="services-tab-row reveal-left">
-            {serviceCards.map((s, i) => (
-              <button
-                key={s.slug}
-                type="button"
-                onClick={() => goToService(i)}
-                className={`services-tab-pill${i === activeService ? " is-active" : ""}`}
-              >
-                {s.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="services-scrollbox-wrap">
-            <div className="services-scrollbox" ref={servicesScrollBoxRef}>
-              {serviceCards.map((s, i) => (
-                <div
-                  key={s.slug}
-                  ref={(el) => {
-                    servicePageRefs.current[i] = el;
-                  }}
-                  className="services-scrollbox-page"
-                >
-                  <div className="services-stage-grid">
-                    <div className="services-story-copy">
-                      <div className="services-story-badge-wrap">
-                        <span
-                          className="services-story-icon"
-                          style={{
-                            background: s.iconImage ? "transparent" : s.color,
-                          }}
-                        >
-                          {s.iconImage ? (
-                            <img
-                              src={s.iconImage}
-                              alt=""
-                              className="w-full h-full object-cover rounded-full"
-                            />
-                          ) : (
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={1.8}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="w-5 h-5"
-                            >
-                              {s.icon}
-                            </svg>
-                          )}
-                        </span>
-                        {/* Product name beside the logo, not the small label. */}
-                        <span className="services-story-pill">{s.name}</span>
-                      </div>
-                      {s.comingSoon && (
-                        <span className="services-story-soon">Coming Soon</span>
-                      )}
-                      <h3 className="services-story-heading">{s.heading}</h3>
-                      <p className="services-story-desc">{s.desc}</p>
-                      <Link
-                        href={`/products/${s.slug}`}
-                        className="btn-navy font-semibold px-7 py-3.5 rounded-xl text-sm inline-flex items-center gap-2 w-fit"
-                      >
-                        Explore {s.name} <span aria-hidden="true">→</span>
-                      </Link>
-                    </div>
-
-                    <div className="services-story-visual">
-                      <div className="services-story-browser">
-                        <div className="services-story-browser-bar">
-                          <span className="services-story-dot dot-red" />
-                          <span className="services-story-dot dot-yellow" />
-                          <span className="services-story-dot dot-green" />
-                          <span className="services-story-url">
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="w-3 h-3 shrink-0"
-                            >
-                              <rect x="5" y="11" width="14" height="9" rx="2" />
-                              <path d="M8 11V7a4 4 0 018 0v4" />
-                            </svg>
-                            {s.displayUrl}
-                          </span>
-                        </div>
-                        <div className="services-story-browser-body">
-                          {s.image ? (
-                            <img src={s.image} alt="" />
-                          ) : (
-                            <span className="flex h-full items-center justify-center text-6xl text-[#0F1729]/20">
-                              {s.name.slice(0, 1)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="services-scrollbox-dots">
+            <div className="services-tab-row reveal-left">
               {serviceCards.map((s, i) => (
                 <button
                   key={s.slug}
                   type="button"
-                  aria-label={`Show ${s.name}`}
-                  className={i === activeService ? "is-active" : ""}
                   onClick={() => goToService(i)}
-                />
+                  className={`services-tab-pill${i === activeService ? " is-active" : ""}`}
+                >
+                  {s.name}
+                </button>
               ))}
             </div>
-          </div>
+
+            <div className="services-scrollbox-wrap">
+              <div className="services-scrollbox" ref={servicesScrollBoxRef}>
+                {serviceCards.map((s, i) => (
+                  <div
+                    key={s.slug}
+                    ref={(el) => {
+                      servicePageRefs.current[i] = el;
+                    }}
+                    className="services-scrollbox-page"
+                  >
+                    <div className="services-stage-grid">
+                      <div className="services-story-copy">
+                        <div className="services-story-badge-wrap">
+                          <span
+                            className="services-story-icon"
+                            style={{
+                              background: s.iconImage ? "transparent" : s.color,
+                            }}
+                          >
+                            {s.iconImage ? (
+                              <img
+                                src={s.iconImage}
+                                alt=""
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            ) : (
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={1.8}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-5 h-5"
+                              >
+                                {s.icon}
+                              </svg>
+                            )}
+                          </span>
+                          {/* Product name beside the logo, not the small label. */}
+                          <span className="services-story-pill">{s.name}</span>
+                        </div>
+                        {s.comingSoon && (
+                          <span className="services-story-soon">
+                            Coming Soon
+                          </span>
+                        )}
+                        <h3 className="services-story-heading">{s.heading}</h3>
+                        <p className="services-story-desc">{s.desc}</p>
+                        <Link
+                          href={`/products/${s.slug}`}
+                          className="btn-navy font-semibold px-7 py-3.5 rounded-xl text-sm inline-flex items-center gap-2 w-fit"
+                        >
+                          Explore {s.name} <span aria-hidden="true">→</span>
+                        </Link>
+                      </div>
+
+                      <div className="services-story-visual">
+                        <div className="services-story-browser">
+                          <div className="services-story-browser-bar">
+                            <span className="services-story-dot dot-red" />
+                            <span className="services-story-dot dot-yellow" />
+                            <span className="services-story-dot dot-green" />
+                            <span className="services-story-url">
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-3 h-3 shrink-0"
+                              >
+                                <rect
+                                  x="5"
+                                  y="11"
+                                  width="14"
+                                  height="9"
+                                  rx="2"
+                                />
+                                <path d="M8 11V7a4 4 0 018 0v4" />
+                              </svg>
+                              {s.displayUrl}
+                            </span>
+                          </div>
+                          <div className="services-story-browser-body">
+                            {s.image ? (
+                              <img src={s.image} alt="" />
+                            ) : (
+                              <span className="flex h-full items-center justify-center text-6xl text-[#0F1729]/20">
+                                {s.name.slice(0, 1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="services-scrollbox-dots">
+                {serviceCards.map((s, i) => (
+                  <button
+                    key={s.slug}
+                    type="button"
+                    aria-label={`Show ${s.name}`}
+                    className={i === activeService ? "is-active" : ""}
+                    onClick={() => goToService(i)}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -855,14 +869,14 @@ export default function Home() {
               </p>
 
               {nepalStats.length > 0 && (
-              <div className="nepal-stats">
-                {nepalStats.map((stat) => (
-                  <div key={stat.id}>
-                    <strong>{stat.value}</strong>
-                    <span>{stat.label}</span>
-                  </div>
-                ))}
-              </div>
+                <div className="nepal-stats">
+                  {nepalStats.map((stat) => (
+                    <div key={stat.id}>
+                      <strong>{stat.value}</strong>
+                      <span>{stat.label}</span>
+                    </div>
+                  ))}
+                </div>
               )}
 
               <div className="nepal-quote">
@@ -937,7 +951,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
 
       {/* ── TESTIMONIALS ── */}
       <TestimonialSection />
