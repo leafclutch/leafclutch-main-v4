@@ -6,6 +6,7 @@ import { useRevealAll } from "@/app/hooks/useReveal";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
 import { useAdmin } from "@/app/context/AdminContext";
 import StatIcon from "@/app/components/ui/StatIcon";
+import HomeServices from "./HomeServices";
 const logoImg = "/Mlogo.png";
 
 const services = [
@@ -731,7 +732,7 @@ export default function Home() {
                       <h3 className="services-story-heading">{s.heading}</h3>
                       <p className="services-story-desc">{s.desc}</p>
                       <Link
-                        href={`/services/${s.slug}`}
+                        href={`/products/${s.slug}`}
                         className="btn-navy font-semibold px-7 py-3.5 rounded-xl text-sm inline-flex items-center gap-2 w-fit"
                       >
                         Explore {s.name} <span aria-hidden="true">→</span>
@@ -791,6 +792,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── OUR SERVICES ── sits directly under the products showcase */}
+      <HomeServices />
 
       {/* ── NEPAL REACH ── */}
       <section className="py-2 lg:py-4 bg-white">

@@ -1,6 +1,10 @@
-import ManagedServicePage from '@/features/services/ManagedServicePage';
+import ServiceSlugRouter from '@/features/services/ServiceSlugRouter';
 
-export default async function ManagedServiceRoute({ params }: { params: Promise<{ service: string }> }) {
+export default async function ServiceRoute({
+  params,
+}: {
+  params: Promise<{ service: string }>;
+}) {
   const { service } = await params;
-  return <ManagedServicePage serviceId={service} />;
+  return <ServiceSlugRouter slug={service} />;
 }

@@ -19,7 +19,7 @@ export default function CourseDetail({ course }: { course: Course }) {
     <div className="course-detail">
       <section className="course-hero">
         <nav className="course-breadcrumb">
-          <Link href="/services/it-training">Home</Link> <span>›</span> <strong>{course.title}</strong>
+          <Link href="/products/it-training">Home</Link> <span>›</span> <strong>{course.title}</strong>
         </nav>
         <div className="course-hero-grid">
           <div className="course-hero-copy">

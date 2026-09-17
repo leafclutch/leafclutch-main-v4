@@ -98,7 +98,7 @@ export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: s
           </div>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
-          <a href={`/services/${service.id}`} target="_blank" rel="noreferrer" className="border border-border text-foreground text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-secondary transition-colors">Preview Page</a>
+          <a href={`/products/${service.id}`} target="_blank" rel="noreferrer" className="border border-border text-foreground text-xs font-semibold px-4 py-2.5 rounded-xl hover:bg-secondary transition-colors">Preview Page</a>
           <button type="button" onClick={save} className="btn-primary text-white text-xs font-semibold px-4 py-2.5 rounded-xl">Save Changes</button>
         </div>
       </div>

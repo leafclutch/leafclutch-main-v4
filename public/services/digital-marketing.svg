@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180" role="img">
+<style>
+.f{animation:fl 3s ease-in-out infinite}
+.f2{animation:fl 3s ease-in-out .5s infinite}
+.p{animation:pu 2.4s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pu{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes dr{to{stroke-dashoffset:0}}
+@keyframes gw{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1)}}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes sl{0%,100%{transform:translateX(0)}50%{transform:translateX(26px)}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<circle cx="200" cy="34" r="46" fill="#0EA5EB" opacity=".07"/>
+<circle cx="34" cy="150" r="34" fill="#062165" opacity=".06"/>
+
+<g class="f">
+<path d="M64 84v22a8 8 0 0 0 8 8h6l6 26h14l-6-26h4l42 22V54l-42 22H72a8 8 0 0 0-8 8Z" fill="#062165"/>
+<path d="M138 76v52" stroke="#0EA5EB" stroke-width="4" stroke-linecap="round"/>
+<g fill="none" stroke="#0EA5EB" stroke-width="4" stroke-linecap="round">
+<path d="M156 78a26 26 0 0 1 0 44" class="p"/>
+<path d="M170 66a44 44 0 0 1 0 68" style="animation:pu 2.4s ease-in-out .4s infinite"/>
+</g>
+</g>
+<g transform="translate(46,150)">
+<rect x="0" y="-16" width="10" height="16" rx="3" fill="#3BE3A0" style="transform-origin:bottom;animation:gw 2s ease-in-out infinite"/>
+<rect x="16" y="-26" width="10" height="26" rx="3" fill="#3BE3A0" style="transform-origin:bottom;animation:gw 2s ease-in-out .25s infinite"/>
+<rect x="32" y="-36" width="10" height="36" rx="3" fill="#3BE3A0" style="transform-origin:bottom;animation:gw 2s ease-in-out .5s infinite"/>
+</g>
+</svg>

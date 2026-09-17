@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAdmin } from "@/app/context/AdminContext";
+import { serviceArtSrc } from "@/app/components/ui/ServiceArt";
 
 const serviceNavDefaults = [
   {
@@ -80,36 +81,43 @@ const serviceNavDefaults = [
   },
 ];
 
-const careerLinks = [
-  { name: "Jobs", desc: "Join our growing team", href: "/careers#jobs" },
-  {
-    name: "Internships",
-    desc: "Start your career with us",
-    href: "/careers#internships",
-  },
+/** Careers sits inside "Others" as a nested submenu. */
+const careerLinksNested = [
+  { name: "Jobs", desc: "Open roles on our team", href: "/careers#jobs" },
+  { name: "Internships", desc: "Start your career with us", href: "/careers#internships" },
 ];
 
 const otherLinks = [
-  { name: "Blogs", desc: "Ideas, news & insights", href: "/#blogs" },
+  { name: "Blogs", desc: "Ideas, news & insights", href: "/blogs" },
   {
-    name: "Verify Certificates",
+    name: "Verify Certificate",
     desc: "Check a Leafclutch certificate",
-    href: "/#verify-certificates",
+    href: "https://verify.leafclutchtechnologies.com.np",
+    external: true,
   },
-  { name: "Our Projects", desc: "Work we are proud of", href: "/#projects" },
+  { name: "FAQ", desc: "Answers to common questions", href: "/faq" },
+  {
+    name: "Leafclutch Academy",
+    desc: "Training & internship programs",
+    href: "https://leafclutchtech.com.np",
+    external: true,
+  },
+  { name: "Our Work", desc: "Projects we are proud of", href: "/portfolio" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
-  const [careersOpen, setCareersOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   const [othersOpen, setOthersOpen] = useState(false);
-  const dropRef = useRef<HTMLDivElement>(null);
-  const careersRef = useRef<HTMLDivElement>(null);
+  /** Careers submenu nested inside Others. */
+  const [careersOpen, setCareersOpen] = useState(false);
+  const servicesRef = useRef<HTMLDivElement>(null);
+  const productsRef = useRef<HTMLDivElement>(null);
   const othersRef = useRef<HTMLDivElement>(null);
   const servicesPanelRef = useRef<HTMLDivElement>(null);
-  const careersPanelRef = useRef<HTMLDivElement>(null);
+  const productsPanelRef = useRef<HTMLDivElement>(null);
   const othersPanelRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -117,7 +125,7 @@ export default function Navbar() {
   const openOnHover = (setOpen: (v: boolean) => void) => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     setServicesOpen(false);
-    setCareersOpen(false);
+    setProductsOpen(false);
     setOthersOpen(false);
     setOpen(true);
   };
@@ -125,15 +133,42 @@ export default function Navbar() {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
       setServicesOpen(false);
-      setCareersOpen(false);
+      setProductsOpen(false);
       setOthersOpen(false);
+      setCareersOpen(false);
     }, 150);
   };
   const cancelClose = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
   };
+
+  // The Careers submenu needs its own hover-intent timer. Closing the instant
+  // the pointer leaves makes it impossible to travel into — a short grace
+  // period lets you move from the trigger to the panel without losing it.
+  const careersTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openCareers = () => {
+    if (careersTimerRef.current) clearTimeout(careersTimerRef.current);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    setCareersOpen(true);
+  };
+  const closeCareersSoon = () => {
+    if (careersTimerRef.current) clearTimeout(careersTimerRef.current);
+    careersTimerRef.current = setTimeout(() => setCareersOpen(false), 260);
+  };
   const pathname = usePathname();
-  const { services: managedServices } = useAdmin();
+  const { services: managedServices, companyServices } = useAdmin();
+
+  // "Services" menu — what Leafclutch does for clients, from Admin > Our Services.
+  const companyServiceLinks = companyServices
+    .filter((service) => service.status === "active")
+    .sort((a, b) => a.order - b.order)
+    .map((service) => ({
+      slug: service.id,
+      name: service.title,
+      icon: service.icon,
+      iconImage: service.iconImage || "",
+      art: serviceArtSrc(service.id),
+    }));
   const services = managedServices.map((service, index) => {
     const fallback = serviceNavDefaults.find(
       (item) => item.slug === service.id,
@@ -166,7 +201,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
-    setServicesOpen(false);
+    setProductsOpen(false);
     setCareersOpen(false);
     setOthersOpen(false);
   }, [pathname]);
@@ -176,16 +211,17 @@ export default function Navbar() {
       const target = e.target as Node;
       if (
         !mobileMenuRef.current?.contains(target) &&
-        !dropRef.current?.contains(target) &&
-        !careersRef.current?.contains(target) &&
+        !servicesRef.current?.contains(target) &&
+        !productsRef.current?.contains(target) &&
         !othersRef.current?.contains(target) &&
         !servicesPanelRef.current?.contains(target) &&
-        !careersPanelRef.current?.contains(target) &&
+        !productsPanelRef.current?.contains(target) &&
         !othersPanelRef.current?.contains(target)
       ) {
         setServicesOpen(false);
-        setCareersOpen(false);
+        setProductsOpen(false);
         setOthersOpen(false);
+        setCareersOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -238,24 +274,52 @@ export default function Navbar() {
               About Us
             </Link>
 
-            {/* Services trigger — panel renders full-width, as a sibling of the nav row */}
+            {/* Services trigger — panel renders full-width below the nav row */}
             <div
               className="relative"
-              ref={dropRef}
+              ref={servicesRef}
               onMouseEnter={() => openOnHover(setServicesOpen)}
               onMouseLeave={closeOnLeave}
             >
               <button
                 onClick={() => {
                   setServicesOpen(!servicesOpen);
-                  setCareersOpen(false);
+                  setProductsOpen(false);
                   setOthersOpen(false);
                 }}
                 className={`nav-link font-medium text-sm text-[#0F1729] flex items-center gap-1 ${pathname.startsWith("/services") ? "active" : ""}`}
               >
-                Products
+                Services
                 <svg
                   className={`w-4 h-4 transition-transform ${servicesOpen ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Products trigger — panel renders full-width, as a sibling of the nav row */}
+            <div
+              className="relative"
+              ref={productsRef}
+              onMouseEnter={() => openOnHover(setProductsOpen)}
+              onMouseLeave={closeOnLeave}
+            >
+              <button
+                onClick={() => {
+                  setProductsOpen(!productsOpen);
+                  setCareersOpen(false);
+                  setOthersOpen(false);
+                }}
+                className={`nav-link font-medium text-sm text-[#0F1729] flex items-center gap-1 ${pathname.startsWith("/products") ? "active" : ""}`}
+              >
+                Products
+                <svg
+                  className={`w-4 h-4 transition-transform ${productsOpen ? "rotate-180" : ""}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -272,36 +336,6 @@ export default function Navbar() {
 
             <div
               className="relative"
-              ref={careersRef}
-              onMouseEnter={() => openOnHover(setCareersOpen)}
-              onMouseLeave={closeOnLeave}
-            >
-              <button
-                onClick={() => {
-                  setCareersOpen(!careersOpen);
-                  setServicesOpen(false);
-                  setOthersOpen(false);
-                }}
-                className={`nav-link font-medium text-sm text-[#0F1729] flex items-center gap-1 ${pathname.startsWith("/careers") ? "active" : ""}`}
-              >
-                Careers
-                <svg
-                  className={`w-4 h-4 transition-transform ${careersOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div
-              className="relative"
               ref={othersRef}
               onMouseEnter={() => openOnHover(setOthersOpen)}
               onMouseLeave={closeOnLeave}
@@ -309,7 +343,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setOthersOpen(!othersOpen);
-                  setServicesOpen(false);
+                  setProductsOpen(false);
                   setCareersOpen(false);
                 }}
                 className="nav-link font-medium text-sm text-[#0F1729] flex items-center gap-1"
@@ -373,17 +407,17 @@ export default function Navbar() {
       </div>
 
       {/* Full-width mega dropdowns — sibling of the row above, so they span the entire nav */}
-      {servicesOpen && (
+      {productsOpen && (
         <div
-          ref={servicesPanelRef}
+          ref={productsPanelRef}
           className="mega-dropdown hidden lg:block"
           onMouseEnter={cancelClose}
           onMouseLeave={closeOnLeave}
         >
           <div className="mega-dropdown-inner max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              href="/services/digital-technology"
-              onClick={() => setServicesOpen(false)}
+              href="/products"
+              onClick={() => setProductsOpen(false)}
               className="mega-dropdown-eyebrow hover:text-accent transition-colors"
             >
               Products Overview →
@@ -392,8 +426,8 @@ export default function Navbar() {
               {services.map((s) => (
                 <Link
                   key={s.slug}
-                  href={`/services/${s.slug}`}
-                  onClick={() => setServicesOpen(false)}
+                  href={`/products/${s.slug}`}
+                  onClick={() => setProductsOpen(false)}
                   className="mega-dropdown-item group"
                 >
                   <span className="mega-dropdown-icon">
@@ -432,35 +466,40 @@ export default function Navbar() {
         </div>
       )}
 
-      {careersOpen && (
+      {servicesOpen && (
         <div
-          ref={careersPanelRef}
+          ref={servicesPanelRef}
           className="mega-dropdown hidden lg:block"
           onMouseEnter={cancelClose}
           onMouseLeave={closeOnLeave}
         >
           <div className="mega-dropdown-inner max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
-              href="/careers"
-              onClick={() => setCareersOpen(false)}
+              href="/services"
+              onClick={() => setServicesOpen(false)}
               className="mega-dropdown-eyebrow hover:text-accent transition-colors"
             >
-              Career Opportunities →
+              All Services →
             </Link>
             <div className="mega-dropdown-grid mega-dropdown-grid-4">
-              {careerLinks.map((item) => (
+              {companyServiceLinks.map((item) => (
                 <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setCareersOpen(false)}
+                  key={item.slug}
+                  href={`/services/${item.slug}`}
+                  onClick={() => setServicesOpen(false)}
                   className="mega-dropdown-item group"
                 >
-                  <span className="mega-dropdown-icon">↗</span>
-                  <span>
-                    <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
-                      {item.name}
-                    </span>
-                    <span className="mega-dropdown-item-desc">{item.desc}</span>
+                  <span className="mega-dropdown-icon">
+                    {item.art ? (
+                      <img src={item.art} alt="" width={40} height={30} loading="lazy" className="h-7 w-auto" />
+                    ) : item.iconImage ? (
+                      <img src={item.iconImage} alt="" className="h-5 w-5 rounded object-cover" />
+                    ) : (
+                      <span aria-hidden="true">{item.icon}</span>
+                    )}
+                  </span>
+                  <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
+                    {item.name}
                   </span>
                 </Link>
               ))}
@@ -479,22 +518,120 @@ export default function Navbar() {
           <div className="mega-dropdown-inner max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <span className="mega-dropdown-eyebrow">Explore Leafclutch →</span>
             <div className="mega-dropdown-grid mega-dropdown-grid-4">
-              {otherLinks.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setOthersOpen(false)}
-                  className="mega-dropdown-item group"
+              {/* Careers opens a nested submenu rather than navigating away. */}
+              <div
+                className="relative"
+                onMouseEnter={openCareers}
+                onMouseLeave={closeCareersSoon}
+              >
+                <button
+                  type="button"
+                  aria-expanded={careersOpen}
+                  aria-haspopup="true"
+                  onClick={() => (careersOpen ? setCareersOpen(false) : openCareers())}
+                  onFocus={openCareers}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setCareersOpen(false);
+                    if (e.key === "ArrowDown") { e.preventDefault(); openCareers(); }
+                  }}
+                  className={`mega-dropdown-item group w-full text-left rounded-xl transition-colors ${
+                    careersOpen ? "bg-secondary" : ""
+                  }`}
                 >
-                  <span className="mega-dropdown-icon">→</span>
+                  <span className="mega-dropdown-icon" aria-hidden="true">💼</span>
                   <span>
-                    <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
-                      {item.name}
+                    <span
+                      className={`mega-dropdown-item-name transition-colors inline-flex items-center gap-1 ${
+                        careersOpen ? "text-accent" : "group-hover:text-accent"
+                      }`}
+                    >
+                      Careers
+                      <svg
+                        className={`h-3.5 w-3.5 transition-transform duration-200 ${careersOpen ? "rotate-90" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
                     </span>
-                    <span className="mega-dropdown-item-desc">{item.desc}</span>
+                    <span className="mega-dropdown-item-desc">Jobs &amp; internships</span>
                   </span>
-                </Link>
-              ))}
+                </button>
+
+                {careersOpen && (
+                  <div
+                    onMouseEnter={openCareers}
+                    onMouseLeave={closeCareersSoon}
+                    onKeyDown={(e) => { if (e.key === "Escape") setCareersOpen(false); }}
+                    /* pt-2 is a hoverable bridge, not a margin: a real gap here
+                       would drop the hover the moment you move toward the panel. */
+                    className="absolute left-0 top-full z-30 w-64 pt-2"
+                  >
+                    <div className="overflow-hidden rounded-xl border border-border bg-white py-1.5 shadow-2xl">
+                      <Link
+                        href="/careers"
+                        onClick={() => { setOthersOpen(false); setCareersOpen(false); }}
+                        className="block px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-accent hover:bg-secondary"
+                      >
+                        All Openings →
+                      </Link>
+                      <span className="mx-4 my-1 block border-t border-border" />
+                      {careerLinksNested.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => { setOthersOpen(false); setCareersOpen(false); }}
+                          className="group/sub block px-4 py-2.5 transition-colors hover:bg-secondary"
+                        >
+                          <span className="block text-sm font-semibold text-foreground transition-colors group-hover/sub:text-accent">
+                            {item.name}
+                          </span>
+                          <span className="block text-[11px] text-muted-foreground">{item.desc}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {otherLinks.map((item) =>
+                item.external ? (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    onClick={() => setOthersOpen(false)}
+                    className="mega-dropdown-item group"
+                  >
+                    <span className="mega-dropdown-icon" aria-hidden="true">↗</span>
+                    <span>
+                      <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
+                        {item.name}
+                      </span>
+                      <span className="mega-dropdown-item-desc">{item.desc}</span>
+                    </span>
+                  </a>
+                ) : (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setOthersOpen(false)}
+                    className="mega-dropdown-item group"
+                  >
+                    <span className="mega-dropdown-icon" aria-hidden="true">→</span>
+                    <span>
+                      <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
+                        {item.name}
+                      </span>
+                      <span className="mega-dropdown-item-desc">{item.desc}</span>
+                    </span>
+                  </Link>
+                ),
+              )}
             </div>
           </div>
         </div>
@@ -528,9 +665,49 @@ export default function Navbar() {
                 onClick={() => setServicesOpen((open) => !open)}
                 className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
               >
-                Products
+                Services
                 <svg
                   className={`h-4 w-4 transition-transform ${servicesOpen ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+              {servicesOpen && (
+                <div className="mt-1 space-y-1">
+                  <Link
+                    href="/services"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-accent hover:bg-secondary"
+                  >
+                    All Services →
+                  </Link>
+                  {companyServiceLinks.map((item) => (
+                    <Link
+                      key={item.slug}
+                      href={`/services/${item.slug}`}
+                      onClick={() => setMenuOpen(false)}
+                      className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="mobile-nav-group">
+              <button
+                type="button"
+                aria-expanded={productsOpen}
+                onClick={() => setProductsOpen((open) => !open)}
+                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
+              >
+                Products
+                <svg
+                  className={`h-4 w-4 transition-transform ${productsOpen ? "rotate-180" : ""}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -543,12 +720,12 @@ export default function Navbar() {
                   />
                 </svg>
               </button>
-              {servicesOpen && (
+              {productsOpen && (
                 <div className="mt-1 space-y-1">
                   {services.map((s) => (
                     <Link
                       key={s.slug}
-                      href={`/services/${s.slug}`}
+                      href={`/products/${s.slug}`}
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
                     >
@@ -580,43 +757,6 @@ export default function Navbar() {
             <div className="mobile-nav-group">
               <button
                 type="button"
-                aria-expanded={careersOpen}
-                onClick={() => setCareersOpen((open) => !open)}
-                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
-              >
-                Careers
-                <svg
-                  className={`h-4 w-4 transition-transform ${careersOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </button>
-              {careersOpen && (
-                <div className="mt-1 space-y-1">
-                  {careerLinks.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setMenuOpen(false)}
-                      className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="mobile-nav-group">
-              <button
-                type="button"
                 aria-expanded={othersOpen}
                 onClick={() => setOthersOpen((open) => !open)}
                 className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
@@ -638,16 +778,47 @@ export default function Navbar() {
               </button>
               {othersOpen && (
                 <div className="mt-1 space-y-1">
-                  {otherLinks.map((item) => (
+                  <Link
+                    href="/careers"
+                    onClick={() => setMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
+                  >
+                    Careers
+                  </Link>
+                  {careerLinksNested.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
-                      className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                      className="block rounded-lg pl-7 pr-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
                     >
                       {item.name}
                     </Link>
                   ))}
+                  {otherLinks.map((item) =>
+                    item.external ? (
+                      <a
+                        key={item.name}
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                      >
+                        {item.name}
+                        <span aria-hidden="true" className="text-xs text-muted-foreground">↗</span>
+                      </a>
+                    ) : (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                      >
+                        {item.name}
+                      </Link>
+                    ),
+                  )}
                 </div>
               )}
             </div>

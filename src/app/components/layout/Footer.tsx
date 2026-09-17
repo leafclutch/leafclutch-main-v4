@@ -1,28 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useAdmin } from "@/app/context/AdminContext";
 const logoImg = "/footer.png";
 
 const companyLinks = [
   { label: "Home", to: "/" },
   { label: "About Us", to: "/about" },
   { label: "Training & Internship", to: "/training" },
-  { label: "Products", to: "/services/digital-technology" },
+  { label: "Services", to: "/services" },
+  { label: "Products", to: "/products" },
   { label: "Careers", to: "/careers" },
   { label: "Contact", to: "mailto:info@leafclutchtech.com.np" },
 ];
 
-const serviceLinks = [
-  {
-    label: "Digital & Technology Solutions",
-    to: "/services/digital-technology",
-  },
-  { label: "IT Training", to: "/services/it-training" },
-  { label: "LMS", to: "/services/lms" },
-  { label: "Pharmacy Management", to: "/services/pharmacy-management" },
-  { label: "Restaurant Management", to: "/services/restaurant-management" },
-  { label: "School Management", to: "/services/school-management" },
-];
 
 const resourceLinks = [
   { label: "Blog & Insights", to: "#" },
@@ -31,6 +22,20 @@ const resourceLinks = [
 ];
 
 export default function Footer() {
+  const { companyServices, services: products } = useAdmin();
+
+  // §29: the footer lists services and products dynamically, so adding one in
+  // the admin panel puts it here automatically.
+  const serviceLinks = companyServices
+    .filter((s) => s.status === "active")
+    .sort((a, b) => a.order - b.order)
+    .slice(0, 6)
+    .map((s) => ({ label: s.title, to: `/services/${s.id}` }));
+
+  const productLinks = products
+    .slice(0, 6)
+    .map((p) => ({ label: p.title, to: `/products/${p.id}` }));
+
   return (
     <footer className="nepal-footer relative overflow-hidden border-t-4 border-[#0EA5EB] bg-linear-to-b from-[#0B1D36] to-[#062165]">
       <div
@@ -214,9 +219,26 @@ export default function Footer() {
 
           {/* Services */}
           <div>
-            <h3 className="font-bold text-white text-sm mb-3">Products</h3>
+            <h3 className="font-bold text-white text-sm mb-3">Services</h3>
             <ul className="space-y-2">
               {serviceLinks.map((l) => (
+                <li key={l.label}>
+                  <Link
+                    href={l.to}
+                    className="text-[#AEC0DE] text-sm hover:text-white transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Products */}
+          <div>
+            <h3 className="font-bold text-white text-sm mb-3">Products</h3>
+            <ul className="space-y-2">
+              {productLinks.map((l) => (
                 <li key={l.label}>
                   <Link
                     href={l.to}
