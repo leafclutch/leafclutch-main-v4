@@ -201,7 +201,9 @@ export default function AboutPage() {
 
   // Same shared metrics as the home page — managed in Admin > Statistics.
   const stats = allStats
-    .filter(s => s.status === 'active' && s.context !== 'home')
+    .filter(
+      s => s.status === 'active' && s.context !== 'home' && s.context !== 'nepal',
+    )
     .sort((a, b) => a.order - b.order)
     .slice(0, 4);
   const founders = members

@@ -4,9 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
-import { useAdmin } from "@/app/context/AdminContext";
+import { useAdmin, type Stat } from "@/app/context/AdminContext";
 import StatIcon from "@/app/components/ui/StatIcon";
 import HomeServices from "./HomeServices";
+import ProcessSection from "@/app/components/ui/ProcessSection";
 const logoImg = "/Mlogo.png";
 
 const services = [
@@ -290,9 +291,28 @@ export default function Home() {
   // Shared company metrics, managed in Admin > Statistics. The hero bar and the
   // "Our Journey" cards both read this, so one edit updates both.
   const homeStats = stats
-    .filter((s) => s.status === "active" && s.context !== "about")
+    .filter(
+      (s) =>
+        s.status === "active" && s.context !== "about" && s.context !== "nepal",
+    )
     .sort((a, b) => a.order - b.order)
     .slice(0, 4);
+
+  // The blue "Powering Businesses Across Nepal" band — Admin > Statistics.
+  // Exactly one Nepal-specific figure (the province count) leads; the other two
+  // slots are the SAME shared rows the hero uses, so the numbers cannot drift
+  // apart. Any extra "nepal" rows are ignored rather than shown twice.
+  const byOrder = (a: Stat, b: Stat) => a.order - b.order;
+  const nepalStats = [
+    ...stats
+      .filter((s) => s.status === "active" && s.context === "nepal")
+      .sort(byOrder)
+      .slice(0, 1),
+    ...stats
+      .filter((s) => s.status === "active" && s.context === "both")
+      .sort(byOrder)
+      .slice(0, 2),
+  ];
   const serviceCards = managedServices.map((service, index) => {
     const fallback = services.find((item) => item.slug === service.id);
     return {
@@ -793,8 +813,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── OUR SERVICES ── sits directly under the products showcase */}
+      {/* ── WHY US ── */}
+      <section
+        id="our-story"
+        className="why-us-section relative overflow-hidden bg-[#F8FAFC] py-8 lg:py-10"
+      >
+        <div className="absolute inset-0 hero-grid opacity-[0.22]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div
+            ref={whyIntroRef}
+            className="why-us-intro mb-20 grid items-center gap-14 lg:grid-cols-[90px_minmax(0,1fr)]"
+          >
+            <div className="hidden h-full flex-col items-center justify-center gap-6 lg:flex">
+              <span className="why-us-vertical-label">Why work with us?</span>
+              <span className="h-18 w-px bg-[#D9E0EA]" />
+            </div>
+            <div className="grid items-center gap-12 lg:grid-cols-[1fr_1fr]">
+              <div className="why-badge-scene reveal-left">
+                <div className="why-badge-glow" />
+                <div className="why-badge-wrap">
+                  <img
+                    src="/2expyear.png"
+                    alt="Leafclutch Technology — 5 Years of Excellence"
+                    className="why-badge-img"
+                  />
+                  <span className="why-badge-shine" aria-hidden="true" />
+                </div>
+              </div>
+              <div ref={aboutPanelRef} className="about-slide-panel">
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
+                  About Leafclutch
+                </span>
+                <h2 className="mt-5 text-3xl font-extrabold leading-tight text-white lg:text-5xl">
+                  Technology that moves your business forward.
+                </h2>
+                <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/80 lg:text-base">
+                  We combine deep engineering expertise with genuine care for
+                  your business outcomes. From management systems to digital
+                  transformation, we build secure, practical products that help
+                  teams work smarter.
+                </p>
+                <div className="mt-8 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.28em] text-white">
+                  Discover more <span className="h-px w-10 bg-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── OUR SERVICES ── */}
       <HomeServices />
+
+      {/* ── OUR PROCESS ── */}
+      <ProcessSection />
 
       {/* ── NEPAL REACH ── */}
       <section className="py-2 lg:py-4 bg-white">
@@ -863,20 +935,16 @@ export default function Home() {
                 grow faster.
               </p>
 
+              {nepalStats.length > 0 && (
               <div className="nepal-stats">
-                <div>
-                  <strong>7</strong>
-                  <span>Provinces Served</span>
-                </div>
-                <div>
-                  <strong>150+</strong>
-                  <span>Projects Delivered</span>
-                </div>
-                <div>
-                  <strong>50+</strong>
-                  <span>Happy Clients</span>
-                </div>
+                {nepalStats.map((stat) => (
+                  <div key={stat.id}>
+                    <strong>{stat.value}</strong>
+                    <span>{stat.label}</span>
+                  </div>
+                ))}
               </div>
+              )}
 
               <div className="nepal-quote">
                 <span className="nepal-quote-mark" aria-hidden="true">
@@ -922,54 +990,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── WHY US ── */}
-      <section
-        id="our-story"
-        className="why-us-section relative overflow-hidden bg-[#F8FAFC] py-8 lg:py-10"
-      >
-        <div className="absolute inset-0 hero-grid opacity-[0.22]" />
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div
-            ref={whyIntroRef}
-            className="why-us-intro mb-20 grid items-center gap-14 lg:grid-cols-[90px_minmax(0,1fr)]"
-          >
-            <div className="hidden h-full flex-col items-center justify-center gap-6 lg:flex">
-              <span className="why-us-vertical-label">Why work with us?</span>
-              <span className="h-18 w-px bg-[#D9E0EA]" />
-            </div>
-            <div className="grid items-center gap-12 lg:grid-cols-[1fr_1fr]">
-              <div className="why-badge-scene reveal-left">
-                <div className="why-badge-glow" />
-                <div className="why-badge-wrap">
-                  <img
-                    src="/2expyear.png"
-                    alt="Leafclutch Technology — 5 Years of Excellence"
-                    className="why-badge-img"
-                  />
-                  <span className="why-badge-shine" aria-hidden="true" />
-                </div>
-              </div>
-              <div ref={aboutPanelRef} className="about-slide-panel">
-                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
-                  About Leafclutch
-                </span>
-                <h2 className="mt-5 text-3xl font-extrabold leading-tight text-white lg:text-5xl">
-                  Technology that moves your business forward.
-                </h2>
-                <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/80 lg:text-base">
-                  We combine deep engineering expertise with genuine care for
-                  your business outcomes. From management systems to digital
-                  transformation, we build secure, practical products that help
-                  teams work smarter.
-                </p>
-                <div className="mt-8 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.28em] text-white">
-                  Discover more <span className="h-px w-10 bg-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── TESTIMONIALS ── */}
       <TestimonialSection />

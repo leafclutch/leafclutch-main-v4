@@ -526,7 +526,7 @@ create table if not exists public.stats (
   value      text not null,                         -- text so "100+" and "99.9%" both work
   suffix     text,
   icon       text,
-  context    text not null default 'home' check (context in ('home','about','both')),
+  context    text not null default 'home' check (context in ('home','about','both','nepal')),
   sort_order integer not null default 0,
   status     text not null default 'active' check (status in ('active','draft')),
   updated_at timestamptz not null default now()
@@ -535,6 +535,11 @@ create table if not exists public.stats (
 alter table public.stats add column if not exists unit    text;
 -- Longer line under those cards, e.g. "Trust Our Solutions".
 alter table public.stats add column if not exists caption text;
+-- 'nepal' drives the blue reach band on the home page. Replacing the constraint
+-- is required for databases created before that context existed.
+alter table public.stats drop constraint if exists stats_context_check;
+alter table public.stats add  constraint stats_context_check
+  check (context in ('home','about','both','nepal'));
 
 -- §3.5 Why Choose Us cards.
 create table if not exists public.why_choose_us (

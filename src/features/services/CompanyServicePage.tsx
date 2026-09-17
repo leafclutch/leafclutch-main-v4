@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { useAdmin } from '@/app/context/AdminContext';
 import { useRevealAll } from '@/app/hooks/useReveal';
 import ServiceArt from '@/app/components/ui/ServiceArt';
+import ProcessSection, { DEFAULT_PROCESS } from '@/app/components/ui/ProcessSection';
 
 /**
  * /services/[slug] — detail page for one company service.
@@ -122,31 +123,14 @@ export default function CompanyServicePage({ serviceId }: { serviceId: string })
         </section>
       )}
 
-      {/* ── PROCESS ── */}
-      {(service.workflow?.length ?? 0) > 0 && (
-        <section className="bg-[#F8FAFC] py-14 lg:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center reveal">
-              <span className="section-badge">How We Work</span>
-              <h2 className="mt-4 text-3xl font-extrabold text-[#0F1729]">Our process</h2>
-            </div>
-            <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {(service.workflow ?? [])
-                .slice()
-                .sort((a, b) => a.step - b.step)
-                .map(step => (
-                  <div key={step.step} className="reveal rounded-2xl border border-border bg-white p-6">
-                    <span className="text-3xl font-extrabold text-accent/30">
-                      {String(step.step).padStart(2, '0')}
-                    </span>
-                    <h3 className="mt-2 font-bold text-[#0F1729]">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-[#676F7E]">{step.description}</p>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ── PROCESS ── steps come from Admin > Our Services, with the
+           company-wide process as a fallback so the section is never empty. */}
+      <ProcessSection
+        steps={service.workflow?.length ? service.workflow : DEFAULT_PROCESS}
+        badge="How We Work"
+        title="Our process"
+        subtitle={`How a ${service.title} project runs from first call to delivery.`}
+      />
 
       {/* ── TECHNOLOGIES ── */}
       {service.technologies.length > 0 && (

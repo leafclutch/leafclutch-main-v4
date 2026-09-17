@@ -14,6 +14,7 @@ const CONTEXTS: { value: StatContext; label: string; hint: string }[] = [
   { value: 'both', label: 'Home + About Us', hint: 'Shown on every page that lists statistics' },
   { value: 'home', label: 'Home page only', hint: 'Hero counters and the Our Journey cards' },
   { value: 'about', label: 'About Us only', hint: 'The statistics row on the About page' },
+  { value: 'nepal', label: 'Nepal reach band', hint: 'The blue "Powering Businesses Across Nepal" band on the home page' },
 ];
 
 function StatFormModal({ initial, onClose, onSave }: {

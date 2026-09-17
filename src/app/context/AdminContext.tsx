@@ -54,7 +54,7 @@ export type AdminService = {
 };
 
 /** Which pages a stat appears on. */
-export type StatContext = "home" | "about" | "both";
+export type StatContext = "home" | "about" | "both" | "nepal";
 
 /**
  * One company metric, shown on the home hero, the "Our Journey" cards and the
@@ -150,6 +150,9 @@ type AdminContextValue = {
   websiteImages: WebsiteImage[];
   members: Member[];
   stats: Stat[];
+  /** Free-text site copy, keyed by setting name. */
+  settings: Record<string, string>;
+  updateSetting: (key: string, value: string) => void;
   addStat: (stat: NewStat) => void;
   updateStat: (id: string, changes: Partial<Stat>) => void;
   deleteStat: (id: string) => void;
@@ -627,6 +630,12 @@ const initialWebsiteImages: WebsiteImage[] = [
   },
 ];
 
+/**
+ * Free-text site copy, stored as key/value rows in `site_settings`.
+ * Anything an admin should be able to reword without a deploy lives here.
+ */
+export const initialSettings: Record<string, string> = {};
+
 export const initialStats: Stat[] = [
   { id: "clients",    value: "100+",  unit: "Clients",  label: "Happy Clients",        caption: "Trust Our Solutions",      icon: "users",   context: "both",  order: 0, status: "active", updatedAt: today() },
   { id: "projects",   value: "50+",   unit: "Projects", label: "Projects Delivered",   caption: "Successfully Delivered",   icon: "layers",  context: "both",  order: 1, status: "active", updatedAt: today() },
@@ -634,6 +643,9 @@ export const initialStats: Stat[] = [
   { id: "uptime",     value: "99.9%", unit: "",         label: "Service Uptime",       caption: "Service Uptime",           icon: "shield",  context: "home",  order: 3, status: "active", updatedAt: today() },
   { id: "team",       value: "10+",   unit: "Members",  label: "Team Members",         caption: "Across Our Teams",         icon: "team",    context: "about", order: 4, status: "active", updatedAt: today() },
   { id: "countries",  value: "2",     unit: "Countries", label: "Countries Served",    caption: "And Growing",              icon: "globe",   context: "about", order: 5, status: "active", updatedAt: today() },
+  // Nepal reach band. Only the province count is specific to it — the other two
+  // slots reuse the shared stats above so the numbers always agree with the hero.
+  { id: "provinces", value: "2", unit: "Provinces", label: "Provinces Served", caption: "Bagmati & Lumbini", icon: "globe", context: "nepal", order: 6, status: "active", updatedAt: today() },
 ];
 
 const initialMembers: Member[] = [
@@ -1292,7 +1304,9 @@ const mapSupabaseStat = (row: any): Stat => {
     caption: row.caption ?? "",
     icon: row.icon ?? "layers",
     context:
-      row.context === "home" || row.context === "about" ? row.context : "both",
+      row.context === "home" || row.context === "about" || row.context === "nepal"
+        ? row.context
+        : "both",
     order: Number(row.sort_order ?? row.order ?? 0),
     status: row.status === "draft" ? "draft" : "active",
     updatedAt: row.updated_at ?? row.updatedAt ?? today(),
@@ -1328,6 +1342,24 @@ const mapSupabaseCompanyService = (row: any): CompanyService => ({
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
 });
 
+/**
+ * Database rows win, but any context the database has no rows for falls back to
+ * the built-in defaults. Without this, a section added after the database was
+ * seeded (the Nepal reach band) would render empty until someone hand-created
+ * its rows in the admin panel.
+ */
+const mergeStats = (remote: Stat[]): Stat[] => {
+  if (remote.length === 0) return initialStats;
+  const covered = new Set(remote.map((stat) => stat.context));
+  const seen = new Set(remote.map((stat) => stat.id));
+  // Skip on id as well as context: the database and the seed share ids like
+  // "team", which would otherwise render the same stat twice.
+  const missing = initialStats.filter(
+    (stat) => !covered.has(stat.context) && !seen.has(stat.id),
+  );
+  return [...remote, ...missing];
+};
+
 const readSupabaseContent = async () => {
   if (!isSupabaseConfigured) return null;
 
@@ -1340,6 +1372,7 @@ const readSupabaseContent = async () => {
     { data: membersData, error: membersError },
     { data: companyServicesData, error: companyServicesError },
     { data: statsData, error: statsError },
+    { data: settingsData, error: settingsError },
   ] = await Promise.all([
     supabase.from("services").select("*"),
     supabase.from("service_images").select("*"),
@@ -1358,6 +1391,7 @@ const readSupabaseContent = async () => {
       .select("*")
       .order("sort_order", { ascending: true }),
     supabase.from("stats").select("*").order("sort_order", { ascending: true }),
+    supabase.from("site_settings").select("*"),
   ]);
 
   const imagesByService = new Map<string, any[]>();
@@ -1409,10 +1443,17 @@ const readSupabaseContent = async () => {
       !membersError && Array.isArray(membersData)
         ? membersData.map(mapSupabaseMember)
         : initialMembers,
-    stats:
-      !statsError && Array.isArray(statsData) && statsData.length > 0
-        ? statsData.map(mapSupabaseStat)
-        : initialStats,
+    stats: mergeStats(
+      !statsError && Array.isArray(statsData) ? statsData.map(mapSupabaseStat) : [],
+    ),
+    settings: {
+      ...initialSettings,
+      ...(!settingsError && Array.isArray(settingsData)
+        ? Object.fromEntries(
+            settingsData.map((row: any) => [row.key, row.value ?? ""]),
+          )
+        : {}),
+    },
   };
 };
 
@@ -1423,6 +1464,7 @@ const syncSupabaseContent = async ({
   websiteImages,
   members,
   stats,
+  settings,
 }: {
   testimonials: Testimonial[];
   services: AdminService[];
@@ -1430,6 +1472,7 @@ const syncSupabaseContent = async ({
   websiteImages: WebsiteImage[];
   members: Member[];
   stats: Stat[];
+  settings: Record<string, string>;
 }) => {
   if (!isSupabaseConfigured) return false;
 
@@ -1621,6 +1664,22 @@ const syncSupabaseContent = async ({
       console.warn("stats sync skipped:", statErr);
     }
 
+    try {
+      const settingRows = Object.entries(settings).map(([key, value]) => ({
+        key,
+        value,
+        updated_at: new Date().toISOString(),
+      }));
+      if (settingRows.length) {
+        const result = await supabase
+          .from("site_settings")
+          .upsert(settingRows, { onConflict: "key" });
+        if (result.error) throw new Error(result.error.message);
+      }
+    } catch (settingErr) {
+      console.warn("site_settings sync skipped:", settingErr);
+    }
+
     for (const service of services) {
       const existingFeatureIds = await supabase
         .from("service_features")
@@ -1709,6 +1768,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     initialCompanyServices,
   );
   const [stats, setStats] = useState<Stat[]>(initialStats);
+  const [settings, setSettings] =
+    useState<Record<string, string>>(initialSettings);
   const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
   const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
@@ -1727,6 +1788,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             setWebsiteImages(remote.websiteImages);
             setMembers(remote.members);
             if (remote.stats) setStats(remote.stats);
+            if (remote.settings) setSettings(remote.settings);
           }
         }
 
@@ -1740,6 +1802,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
               websiteImages?: WebsiteImage[];
               members?: Member[];
               stats?: Stat[];
+              settings?: Record<string, string>;
             };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
@@ -1748,6 +1811,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (content.websiteImages) setWebsiteImages(content.websiteImages);
             if (content.members) setMembers(content.members);
             if (content.stats) setStats(content.stats);
+            if (content.settings) setSettings(content.settings);
           }
         }
         const savedPassword = window.localStorage.getItem(PASSWORD_KEY);
@@ -1773,6 +1837,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         websiteImages,
         members,
         stats,
+        settings,
       });
       return;
     }
@@ -1786,9 +1851,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         websiteImages,
         members,
         stats,
+        settings,
       }),
     );
-  }, [testimonials, services, companyServices, websiteImages, members, stats]);
+  }, [testimonials, services, companyServices, websiteImages, members, stats, settings]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -2092,6 +2158,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setMembers((current) => current.filter((member) => member.id !== id));
   };
 
+  const updateSetting = (key: string, value: string) => {
+    setSettings((current) => ({ ...current, [key]: value }));
+  };
+
   const addStat = (stat: NewStat) => {
     setStats((current) => [
       ...current,
@@ -2161,6 +2231,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setWebsiteImages(initialWebsiteImages);
     setMembers(initialMembers);
     setStats(initialStats);
+    setSettings(initialSettings);
   };
 
   const syncContent = () =>
@@ -2171,6 +2242,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       websiteImages,
       members,
       stats,
+      settings,
     });
 
   return (
@@ -2204,6 +2276,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         updateWebsiteImage,
         deleteWebsiteImage,
         stats,
+        settings,
+        updateSetting,
         addStat,
         updateStat,
         deleteStat,

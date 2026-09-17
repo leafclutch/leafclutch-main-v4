@@ -643,54 +643,46 @@ export default function Navbar() {
           ref={mobileMenuRef}
           className="lg:hidden relative z-10 max-h-[calc(100vh-3.5rem)] overflow-y-auto bg-white border-t border-border shadow-xl pointer-events-auto"
         >
-          <div className="px-4 py-4 space-y-1">
+          <div className="mnav">
             <Link
               href="/"
               onClick={() => setMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary"
+              className={`mnav-link${isActive("/") ? " is-active" : ""}`}
             >
               Home
             </Link>
             <Link
               href="/about"
               onClick={() => setMenuOpen(false)}
-              className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary"
+              className={`mnav-link${pathname === "/about" ? " is-active" : ""}`}
             >
               About Us
             </Link>
-            <div className="mobile-nav-group">
+
+            {/* ── Services ── */}
+            <div className="mnav-group">
               <button
                 type="button"
                 aria-expanded={servicesOpen}
                 onClick={() => setServicesOpen((open) => !open)}
-                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
+                className="mnav-head"
               >
                 Services
-                <svg
-                  className={`h-4 w-4 transition-transform ${servicesOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                 </svg>
               </button>
               {servicesOpen && (
-                <div className="mt-1 space-y-1">
-                  <Link
-                    href="/services"
-                    onClick={() => setMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wide text-accent hover:bg-secondary"
-                  >
-                    All Services →
+                <div className="mnav-panel">
+                  <Link href="/services" onClick={() => setMenuOpen(false)} className="mnav-all">
+                    All Services <span aria-hidden="true">→</span>
                   </Link>
                   {companyServiceLinks.map((item) => (
                     <Link
                       key={item.slug}
                       href={`/services/${item.slug}`}
                       onClick={() => setMenuOpen(false)}
-                      className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                      className={`mnav-item${pathname === `/services/${item.slug}` ? " is-active" : ""}`}
                     >
                       {item.name}
                     </Link>
@@ -698,90 +690,58 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-            <div className="mobile-nav-group">
+
+            {/* ── Products ── */}
+            <div className="mnav-group">
               <button
                 type="button"
                 aria-expanded={productsOpen}
                 onClick={() => setProductsOpen((open) => !open)}
-                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
+                className="mnav-head"
               >
                 Products
-                <svg
-                  className={`h-4 w-4 transition-transform ${productsOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                 </svg>
               </button>
               {productsOpen && (
-                <div className="mt-1 space-y-1">
+                <div className="mnav-panel">
+                  <Link href="/products" onClick={() => setMenuOpen(false)} className="mnav-all">
+                    All Products <span aria-hidden="true">→</span>
+                  </Link>
                   {services.map((s) => (
                     <Link
                       key={s.slug}
                       href={`/products/${s.slug}`}
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                      className={`mnav-item${pathname === `/products/${s.slug}` ? " is-active" : ""}`}
                     >
-                      {s.iconImage ? (
-                        <img
-                          src={s.iconImage}
-                          alt=""
-                          className="h-4 w-4 rounded-full object-cover"
-                        />
-                      ) : (
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.8}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4 text-accent"
-                        >
-                          {s.icon}
-                        </svg>
-                      )}
-                      <span>{s.name}</span>
+                      {s.name}
                     </Link>
                   ))}
                 </div>
               )}
             </div>
-            <div className="mobile-nav-group">
+
+            {/* ── Others (Careers nests inside) ── */}
+            <div className="mnav-group">
               <button
                 type="button"
                 aria-expanded={othersOpen}
                 onClick={() => setOthersOpen((open) => !open)}
-                className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest"
+                className="mnav-head"
               >
                 Others
-                <svg
-                  className={`h-4 w-4 transition-transform ${othersOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                 </svg>
               </button>
               {othersOpen && (
-                <div className="mt-1 space-y-1">
+                <div className="mnav-panel">
                   <Link
                     href="/careers"
                     onClick={() => setMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
+                    className="mnav-parent"
                   >
                     Careers
                   </Link>
@@ -790,7 +750,7 @@ export default function Navbar() {
                       key={item.name}
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
-                      className="block rounded-lg pl-7 pr-3 py-2 text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      className="mnav-sub"
                     >
                       {item.name}
                     </Link>
@@ -803,17 +763,17 @@ export default function Navbar() {
                         target="_blank"
                         rel="noreferrer noopener"
                         onClick={() => setMenuOpen(false)}
-                        className="flex items-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                        className="mnav-item"
                       >
                         {item.name}
-                        <span aria-hidden="true" className="text-xs text-muted-foreground">↗</span>
+                        <span className="mnav-ext" aria-hidden="true">↗</span>
                       </a>
                     ) : (
                       <Link
                         key={item.name}
                         href={item.href}
                         onClick={() => setMenuOpen(false)}
-                        className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary"
+                        className={`mnav-item${pathname === item.href ? " is-active" : ""}`}
                       >
                         {item.name}
                       </Link>
@@ -822,6 +782,7 @@ export default function Navbar() {
                 </div>
               )}
             </div>
+
             <a
               href="mailto:info@leafclutchtech.com.np"
               onClick={() => setMenuOpen(false)}

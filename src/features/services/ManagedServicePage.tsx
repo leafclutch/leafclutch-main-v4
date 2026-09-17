@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAdmin } from "@/app/context/AdminContext";
 import PricingSection from "@/app/components/ui/PricingSection";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
+import ProcessSection from "@/app/components/ui/ProcessSection";
 import { useImageSlider } from "@/app/hooks/useImageSlider";
 import { useRevealAll } from "@/app/hooks/useReveal";
 
@@ -394,6 +395,12 @@ export default function ManagedServicePage({
           <i>◆</i>
         </div>
       </section>
+
+      <ProcessSection
+        badge="How We Work"
+        title="From first call to go-live"
+        subtitle={`How we roll out ${serviceContent.title} for your team.`}
+      />
 
       <TestimonialSection service={serviceContent.title} />
       <section className="svc-cta">
