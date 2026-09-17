@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAdmin } from "@/app/context/AdminContext";
+import { useAdmin, byDisplayOrder } from "@/app/context/AdminContext";
 import { serviceArtSrc } from "@/app/components/ui/ServiceArt";
 
 const serviceNavDefaults = [
@@ -169,7 +169,7 @@ export default function Navbar() {
       iconImage: service.iconImage || "",
       art: serviceArtSrc(service.id),
     }));
-  const services = managedServices.map((service, index) => {
+  const services = [...managedServices].sort(byDisplayOrder).map((service, index) => {
     const fallback = serviceNavDefaults.find(
       (item) => item.slug === service.id,
     );
@@ -368,12 +368,12 @@ export default function Navbar() {
 
           {/* CTA */}
           <div className="hidden lg:flex lg:flex-1 items-center justify-end gap-3">
-            <a
-              href="mailto:info@leafclutchtech.com.np"
+            <Link
+              href="/contact"
               className="btn-navy text-sm font-semibold px-5 py-2.5 rounded-xl"
             >
               Contact Us
-            </a>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -783,13 +783,13 @@ export default function Navbar() {
               )}
             </div>
 
-            <a
-              href="mailto:info@leafclutchtech.com.np"
+            <Link
+              href="/contact"
               onClick={() => setMenuOpen(false)}
               className="block mx-3 mt-3 btn-primary text-white text-center text-sm font-semibold px-5 py-3 rounded-xl"
             >
               Contact Us
-            </a>
+            </Link>
           </div>
         </div>
       )}

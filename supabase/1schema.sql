@@ -141,6 +141,9 @@ alter table public.company_services add column if not exists seo_description tex
 alter table public.company_services add column if not exists seo_image       text;
 alter table public.company_services add column if not exists featured        boolean not null default false;
 alter table public.company_services add column if not exists show_on_home    boolean not null default true;
+-- Pricing tiers shown on the service page:
+--   [{ "id","name","price","period","description","features":[],"featured":true }]
+alter table public.company_services add column if not exists pricing         jsonb not null default '[]'::jsonb;
 
 create unique index if not exists company_services_slug_key on public.company_services (slug) where slug is not null;
 create index if not exists company_services_status_idx on public.company_services (status, sort_order);
@@ -370,6 +373,10 @@ create table if not exists public.portfolio_projects (
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
+-- What the client said about the work, shown on the /portfolio card.
+alter table public.portfolio_projects add column if not exists testimonial        text;
+alter table public.portfolio_projects add column if not exists testimonial_author text;
+
 create index if not exists portfolio_status_idx on public.portfolio_projects (status, sort_order);
 
 create table if not exists public.portfolio_images (

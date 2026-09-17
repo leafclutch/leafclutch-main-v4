@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
-import { useAdmin, type Stat } from "@/app/context/AdminContext";
+import { useAdmin, byDisplayOrder, type Stat } from "@/app/context/AdminContext";
 import StatIcon from "@/app/components/ui/StatIcon";
 import HomeServices from "./HomeServices";
 import ProcessSection from "@/app/components/ui/ProcessSection";
@@ -230,7 +230,9 @@ export default function Home() {
       .sort(byOrder)
       .slice(0, 2),
   ];
-  const serviceCards = managedServices.map((service, index) => {
+  const serviceCards = [...managedServices]
+    .sort(byDisplayOrder)
+    .map((service, index) => {
     const fallback = services.find((item) => item.slug === service.id);
     return {
       name: service.title,

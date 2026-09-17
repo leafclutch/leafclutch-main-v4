@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAdmin } from "@/app/context/AdminContext";
+import { useAdmin, byDisplayOrder } from "@/app/context/AdminContext";
 const logoImg = "/footer.png";
 
 const companyLinks = [
@@ -11,7 +11,7 @@ const companyLinks = [
   { label: "Services", to: "/services" },
   { label: "Products", to: "/products" },
   { label: "Careers", to: "/careers" },
-  { label: "Contact", to: "mailto:info@leafclutchtech.com.np" },
+  { label: "Contact", to: "/contact" },
 ];
 
 
@@ -32,7 +32,8 @@ export default function Footer() {
     .slice(0, 6)
     .map((s) => ({ label: s.title, to: `/services/${s.id}` }));
 
-  const productLinks = products
+  const productLinks = [...products]
+    .sort(byDisplayOrder)
     .slice(0, 6)
     .map((p) => ({ label: p.title, to: `/products/${p.id}` }));
 

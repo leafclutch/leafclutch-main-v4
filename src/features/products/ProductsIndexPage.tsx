@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAdmin } from '@/app/context/AdminContext';
+import { useAdmin, byDisplayOrder } from '@/app/context/AdminContext';
 import { useRevealAll } from '@/app/hooks/useReveal';
 
 /**
@@ -14,7 +14,7 @@ export default function ProductsIndexPage() {
   const { services: products } = useAdmin();
 
   // AdminService.status is only 'active' | 'coming_soon' — both are public.
-  const live = products;
+  const live = [...products].sort(byDisplayOrder);
 
   return (
     <div className="bg-white">

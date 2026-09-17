@@ -2,16 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useAdmin, type AdminService, type ServiceFeature, type ServiceImage } from '@/app/context/AdminContext';
+import PricingEditor from './PricingEditor';
 import { ConfirmDialog, Field, ImageDropzone, Modal, StatusPill } from './shared';
 import { TestimonialsBoard } from './TestimonialsPanel';
 
-type SubTab = 'basic' | 'images' | 'features' | 'testimonials' | 'settings';
+type SubTab = 'basic' | 'images' | 'features' | 'pricing' | 'testimonials' | 'settings';
 
 const TABS: { id: SubTab; label: string; icon: string }[] = [
   { id: 'basic', label: 'Basic Info', icon: '📄' },
   { id: 'images', label: 'Product Images', icon: '🖼️' },
   { id: 'features', label: 'Features', icon: '⚙️' },
   { id: 'testimonials', label: 'Testimonials', icon: '💬' },
+  { id: 'pricing', label: 'Pricing', icon: '💰' },
   { id: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -48,6 +50,7 @@ export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: s
       title: draft.title, label: draft.label, heading: draft.heading,
       description: draft.description, status: draft.status, iconImage: draft.iconImage,
       productUrl: draft.productUrl,
+      pricing: draft.pricing,
     });
     setSaved(true);
   };
@@ -122,6 +125,17 @@ export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: s
       {subTab === 'images' && <ServiceImagesTab service={service} />}
       {subTab === 'features' && <FeaturesTab service={service} />}
       {subTab === 'testimonials' && <TestimonialsBoard testimonials={testimonials.filter(t => t.service === service.title)} services={services} scopeService={service.title} />}
+      {subTab === 'pricing' && (
+        <div className="bg-white rounded-2xl border border-border p-6">
+          <PricingEditor
+            tiers={draft?.pricing ?? []}
+            onChange={next => setField('pricing', next)}
+          />
+          <button type="button" onClick={save} className="btn-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold mt-5">
+            {saved ? 'Saved ✓' : 'Save Pricing'}
+          </button>
+        </div>
+      )}
       {subTab === 'settings' && <ServiceSettingsTab service={service} onDeleted={onBack} />}
     </div>
   );

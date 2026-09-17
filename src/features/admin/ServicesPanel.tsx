@@ -1,10 +1,11 @@
 'use client';
 
-import { useAdmin } from '@/app/context/AdminContext';
+import { useAdmin, byDisplayOrder } from '@/app/context/AdminContext';
 import { StatusPill, relativeTime } from './shared';
 
 export default function ServicesPanel({ onEdit, onAddNew }: { onEdit: (id: string) => void; onAddNew: () => void }) {
-  const { services } = useAdmin();
+  const { services, setServicePosition } = useAdmin();
+  const ordered = [...services].sort(byDisplayOrder);
 
   return (
     <div>
@@ -22,6 +23,7 @@ export default function ServicesPanel({ onEdit, onAddNew }: { onEdit: (id: strin
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b border-border bg-[#F8FAFC]">
+                <th className="px-4 py-3 font-semibold w-20">Order</th>
                 <th className="px-4 py-3 font-semibold">Product</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Last Updated</th>
@@ -29,8 +31,21 @@ export default function ServicesPanel({ onEdit, onAddNew }: { onEdit: (id: strin
               </tr>
             </thead>
             <tbody>
-              {services.map(service => (
+              {ordered.map((service, index) => (
                 <tr key={service.id} className="border-b border-[#F3F4F7] last:border-0 hover:bg-[#F8FAFC] transition-colors">
+                  {/* Pick the position directly — 1 shows first everywhere. */}
+                  <td className="px-4 py-3">
+                    <select
+                      value={index + 1}
+                      onChange={e => setServicePosition(service.id, Number(e.target.value))}
+                      aria-label={`Position of ${service.title}`}
+                      className="admin-input !py-1.5 text-xs font-bold"
+                    >
+                      {ordered.map((_, i) => (
+                        <option key={i} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {service.heroImage ? (

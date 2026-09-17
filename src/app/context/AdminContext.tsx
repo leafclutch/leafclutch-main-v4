@@ -13,6 +13,68 @@ import { normalizeMemberLinks, type MemberLink } from "@/lib/memberLinks";
 export type { MemberLink, MemberLinkPlatform } from "@/lib/memberLinks";
 
 export type ServiceImage = { id: string; label: string; url: string };
+
+/** One pricing tier on a product or service page. */
+export type PricingTier = {
+  id: string;
+  name: string;
+  /** Free text so "15,000", "Custom" and "Free" all work. */
+  price: string;
+  /** Billing period shown after the price, e.g. "month". Blank for one-off. */
+  period?: string;
+  description: string;
+  features: string[];
+  /** Greyed-out lines, to show what a tier leaves out. */
+  notIncluded?: string[];
+  /** Highlights the tier as the recommended one. */
+  featured?: boolean;
+  ctaLabel?: string;
+};
+
+export const DEFAULT_PRICING: PricingTier[] = [
+  {
+    id: "starter", name: "Starter", price: "15,000", period: "month",
+    description: "For teams getting started",
+    features: ["Core features", "Basic reporting", "1 workspace", "Email support"],
+    notIncluded: ["Advanced analytics", "Custom integrations"],
+    ctaLabel: "Get Started",
+  },
+  {
+    id: "professional", name: "Professional", price: "35,000", period: "month",
+    description: "For growing organizations",
+    features: ["All Starter features", "Advanced reporting", "Multiple users", "Priority support"],
+    featured: true,
+    ctaLabel: "Get Started",
+  },
+  {
+    id: "enterprise", name: "Enterprise", price: "65,000+", period: "month",
+    description: "For complex operations",
+    features: ["All Professional features", "Custom integrations", "Dedicated manager", "24/7 support"],
+    ctaLabel: "Contact Sales",
+  },
+];
+
+/** Rows may arrive as loose JSON; keep only what we can render. */
+/** Sort by admin position, keeping declaration order when unset. */
+export const byDisplayOrder = <T extends { order?: number }>(a: T, b: T) =>
+  (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER);
+
+export const normalizePricing = (raw: unknown): PricingTier[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((t) => t && typeof t === "object")
+    .map((t: any, index: number) => ({
+      id: String(t.id ?? `tier-${index}`),
+      name: String(t.name ?? "Plan"),
+      price: String(t.price ?? ""),
+      period: t.period ? String(t.period) : "",
+      description: String(t.description ?? t.desc ?? ""),
+      features: Array.isArray(t.features) ? t.features.map(String) : [],
+      notIncluded: Array.isArray(t.notIncluded) ? t.notIncluded.map(String) : [],
+      featured: Boolean(t.featured),
+      ctaLabel: t.ctaLabel ? String(t.ctaLabel) : "Get Started",
+    }));
+};
 export type ServiceFeature = {
   id: string;
   icon: string;
@@ -47,6 +109,10 @@ export type AdminService = {
   heroImage: string;
   /** Live product URL, shown in the browser mock on the home page. */
   productUrl?: string;
+  /** Pricing tiers shown on the product page. Empty falls back to defaults. */
+  pricing?: PricingTier[];
+  /** Display position. Lower shows first, everywhere the product is listed. */
+  order?: number;
   images: ServiceImage[];
   features: ServiceFeature[];
   status: "active" | "coming_soon";
@@ -121,6 +187,8 @@ export type CompanyService = {
   benefits: string[];
   technologies: string[];
   workflow?: CompanyServiceWorkflow[];
+  /** Pricing tiers shown on the service page. Empty falls back to defaults. */
+  pricing?: PricingTier[];
   status: "active" | "draft";
   order: number;
   updatedAt: string;
@@ -155,6 +223,16 @@ type AdminContextValue = {
   updateSetting: (key: string, value: string) => void;
   clients: Client[];
   addClient: (client: NewClient) => void;
+  projects: Project[];
+  addProject: (project: NewProject) => void;
+  faqs: Faq[];
+  addFaq: (item: NewFaq) => void;
+  updateFaq: (id: string, changes: Partial<Faq>) => void;
+  deleteFaq: (id: string) => void;
+  reorderFaq: (id: string, direction: "up" | "down") => void;
+  updateProject: (id: string, changes: Partial<Project>) => void;
+  deleteProject: (id: string) => void;
+  reorderProject: (id: string, direction: "up" | "down") => void;
   updateClient: (id: string, changes: Partial<Client>) => void;
   deleteClient: (id: string) => void;
   reorderClient: (id: string, direction: "up" | "down") => void;
@@ -200,6 +278,7 @@ type AdminContextValue = {
   updateMember: (id: string, changes: Partial<Member>) => void;
   deleteMember: (id: string) => void;
   reorderMember: (id: string, direction: "up" | "down") => void;
+  setServicePosition: (id: string, position: number) => void;
   syncContent: () => Promise<boolean>;
   resetContent: () => void;
 };
@@ -662,6 +741,130 @@ export const initialClients: Client[] = [
   { id: "everest-pharmacy", name: "Everest Pharmacy",   order: 2, status: "active", updatedAt: today() },
   { id: "kathmandu-crafts", name: "Kathmandu Crafts",   order: 3, status: "active", updatedAt: today() },
   { id: "lumbini-academy",  name: "Lumbini Academy",    order: 4, status: "active", updatedAt: today() },
+];
+
+/**
+ * §12 Our Work — portfolio projects shown on /portfolio.
+ * Managed from Admin > Our Work.
+ */
+export type Project = {
+  id: string;
+  /** Company / client the work was for. */
+  company: string;
+  /** Live site to link the "Visit Site" button at. */
+  url?: string;
+  /** Uploaded image or a pasted image URL. */
+  image?: string;
+  category?: string;
+  description?: string;
+  /** What the client said about the work. */
+  testimonial?: string;
+  testimonialAuthor?: string;
+  order: number;
+  status: "active" | "draft";
+  updatedAt: string;
+};
+
+export type NewProject = Omit<Project, "id" | "updatedAt" | "order">;
+
+export const initialProjects: Project[] = [
+  {
+    id: "hrestrosewa-platform",
+    company: "HRestroSewa",
+    url: "https://hrestrosewa.leafclutch.com.np/",
+    image: "",
+    category: "SaaS Product",
+    description:
+      "QR ordering, kitchen display and live sales reporting for multi-outlet restaurants.",
+    testimonial:
+      "Orders reach the kitchen instantly and we finally see real numbers at the end of the day.",
+    testimonialAuthor: "Restaurant Owner, Butwal",
+    order: 0,
+    status: "active",
+    updatedAt: today(),
+  },
+];
+
+/** §13 FAQ categories, in the order they appear as filter chips. */
+export const FAQ_CATEGORIES = [
+  "General",
+  "Services",
+  "Products",
+  "Training",
+  "Internship",
+  "Pricing",
+  "Support",
+] as const;
+
+export type Faq = {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  order: number;
+  status: "active" | "draft";
+  updatedAt: string;
+};
+
+export type NewFaq = Omit<Faq, "id" | "updatedAt" | "order">;
+
+const faq = (
+  id: string,
+  category: string,
+  question: string,
+  answer: string,
+  order: number,
+): Faq => ({ id, category, question, answer, order, status: "active", updatedAt: today() });
+
+export const initialFaqs: Faq[] = [
+  faq("what-we-do", "General", "What does Leafclutch Technologies do?",
+    "We build custom software and websites, run digital marketing and SEO, handle graphic design and video production, deliver professional IT training, and operate our own SaaS products such as HRestroSewa and PragyaOS.", 0),
+  faq("where-based", "General", "Where are you based?",
+    "Our office is in Siddharthanagar, Rupandehi, Nepal. We work with clients across the country and remotely.", 1),
+  faq("who-we-work-with", "General", "What size of business do you work with?",
+    "Everything from a single restaurant to multi-branch schools and established companies. The approach scales — small projects get the same engineering standards as large ones.", 2),
+
+  faq("project-timeline", "Services", "How long does a project take?",
+    "It depends on scope. A brochure website is usually 2–4 weeks, a custom platform 2–6 months. You get a firm timeline in writing after the discovery call, before any work starts.", 3),
+  faq("process", "Services", "How does the process work?",
+    "Four stages: Discovery (understanding your needs), Planning (a detailed roadmap), Development (built in agile sprints with regular check-ins), and Delivery (testing, deployment and ongoing support).", 4),
+  faq("own-the-code", "Services", "Do we own the code you write?",
+    "Yes. You get full ownership of the source code and intellectual property for custom work. Nothing is locked to us.", 5),
+  faq("existing-project", "Services", "Can you take over a project someone else started?",
+    "Often yes. We will audit the existing code first and tell you honestly whether it is better to continue it or rebuild.", 6),
+
+  faq("try-products", "Products", "Can I try your SaaS products before buying?",
+    "Yes. Contact us and we will set up a live demo of HRestroSewa or PragyaOS loaded with sample data so you can test it properly.", 7),
+  faq("customise-product", "Products", "Can your products be customised for my business?",
+    "Yes. Our platforms are configurable out of the box, and we build custom modules where your workflow needs something different.", 8),
+  faq("data-safe", "Products", "Where is our data stored and is it safe?",
+    "Data is stored on managed cloud infrastructure with encrypted connections, automated daily backups and role-based access. You can export your data at any time.", 9),
+
+  faq("training-certificate", "Training", "Do I get a certificate after training?",
+    "Yes. Everyone who completes a program receives a certificate, and anyone can confirm it is genuine on our Verify Certificate page.", 10),
+  faq("training-format", "Training", "Are classes online or in person?",
+    "Both. We run physical classes at our Siddharthanagar office and live online sessions, so you can pick whichever fits your schedule.", 11),
+  faq("training-beginner", "Training", "Do I need experience to join a course?",
+    "No. Our courses start from fundamentals and build up. What matters is showing up consistently and doing the project work.", 12),
+
+  faq("internship-apply", "Internship", "How do I apply for an internship?",
+    "Open internship positions are listed on our Careers page. Apply there with your CV — we review every application.", 13),
+  faq("internship-paid", "Internship", "Are internships paid?",
+    "It varies by role and duration. The details are stated on each listing, and top performers are considered for full-time positions.", 14),
+
+  faq("cost", "Pricing", "How much does a project cost?",
+    "It depends on scope and complexity. Tell us what you need and we will send a written quote with a clear breakdown — no hidden charges.", 15),
+  faq("payment-terms", "Pricing", "What are your payment terms?",
+    "Typically staged: a deposit to begin, then payments tied to agreed milestones. We confirm the schedule in writing before work starts.", 16),
+  faq("saas-pricing", "Pricing", "How is SaaS pricing structured?",
+    "Our products are subscription based, priced by the size of your operation. There are no setup fees for standard configurations.", 17),
+
+  faq("post-launch", "Support", "Do you provide support after launch?",
+    "Yes. Every project includes a support period after delivery, and we offer ongoing maintenance plans covering updates, monitoring and fixes.", 18),
+  faq("response-time", "Support", "How quickly do you respond to issues?",
+    "During business hours we aim to acknowledge within a few hours. Critical issues on live systems are treated as a priority.", 19),
+  faq("training-staff", "Support", "Will you train our staff to use the system?",
+    "Yes. Handover includes training sessions for your team plus written documentation they can refer back to.", 20),
 ];
 
 export const initialSettings: Record<string, string> = {};
@@ -1271,6 +1474,8 @@ const mapSupabaseService = (row: any): AdminService => ({
   description: row.description ?? "",
   heroImage: row.hero_image ?? row.heroImage ?? "",
   productUrl: row.product_url ?? row.productUrl ?? "",
+  pricing: normalizePricing(row.pricing),
+  order: Number(row.sort_order ?? 0),
   images: Array.isArray(row.service_images)
     ? row.service_images.map((image: any) => ({
         id: image.id ?? genId("img"),
@@ -1315,6 +1520,36 @@ const mapSupabaseWebsiteImage = (row: any): WebsiteImage => ({
   name: row.name ?? "Website Image",
   usedIn: row.used_in ?? row.usedIn ?? "",
   url: row.url ?? "",
+  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+});
+
+/** 'general' / 'General' / 'GENERAL' all resolve to the canonical name. */
+const toFaqCategory = (raw: unknown): string => {
+  const value = String(raw ?? "").trim().toLowerCase();
+  return FAQ_CATEGORIES.find((c) => c.toLowerCase() === value) ?? "General";
+};
+
+const mapSupabaseFaq = (row: any): Faq => ({
+  id: row.id ?? genId("faq"),
+  question: row.question ?? "",
+  answer: row.answer ?? "",
+  category: toFaqCategory(row.category ?? row.category_id),
+  order: Number(row.sort_order ?? row.order ?? 0),
+  status: row.status === "draft" ? "draft" : "active",
+  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+});
+
+const mapSupabaseProject = (row: any): Project => ({
+  id: row.id ?? genId("project"),
+  company: row.client_name ?? row.name ?? row.company ?? "Project",
+  url: row.project_url ?? row.url ?? "",
+  image: row.cover_image ?? row.image ?? "",
+  category: row.category ?? "",
+  description: row.short_description ?? row.description ?? "",
+  testimonial: row.testimonial ?? "",
+  testimonialAuthor: row.testimonial_author ?? row.testimonialAuthor ?? "",
+  order: Number(row.sort_order ?? row.order ?? 0),
+  status: row.status === "draft" ? "draft" : "active",
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
 });
 
@@ -1377,6 +1612,7 @@ const mapSupabaseCompanyService = (row: any): CompanyService => ({
   benefits: Array.isArray(row.benefits) ? row.benefits : [],
   technologies: Array.isArray(row.technologies) ? row.technologies : [],
   workflow: Array.isArray(row.workflow) ? row.workflow : [],
+  pricing: normalizePricing(row.pricing),
   status: row.status === "draft" ? "draft" : "active",
   order: Number(row.sort_order ?? row.order ?? 0),
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
@@ -1414,8 +1650,13 @@ const readSupabaseContent = async () => {
     { data: statsData, error: statsError },
     { data: settingsData, error: settingsError },
     { data: clientsData, error: clientsError },
+    { data: projectsData, error: projectsError },
+    { data: faqsData, error: faqsError },
   ] = await Promise.all([
-    supabase.from("services").select("*"),
+    supabase
+      .from("services")
+      .select("*")
+      .order("sort_order", { ascending: true }),
     supabase.from("service_images").select("*"),
     supabase
       .from("service_features")
@@ -1434,6 +1675,11 @@ const readSupabaseContent = async () => {
     supabase.from("stats").select("*").order("sort_order", { ascending: true }),
     supabase.from("site_settings").select("*"),
     supabase.from("clients").select("*").order("sort_order", { ascending: true }),
+    supabase
+      .from("portfolio_projects")
+      .select("*")
+      .order("sort_order", { ascending: true }),
+    supabase.from("faqs").select("*").order("sort_order", { ascending: true }),
   ]);
 
   const imagesByService = new Map<string, any[]>();
@@ -1488,6 +1734,14 @@ const readSupabaseContent = async () => {
     stats: mergeStats(
       !statsError && Array.isArray(statsData) ? statsData.map(mapSupabaseStat) : [],
     ),
+    faqs:
+      !faqsError && Array.isArray(faqsData) && faqsData.length > 0
+        ? faqsData.map(mapSupabaseFaq)
+        : initialFaqs,
+    projects:
+      !projectsError && Array.isArray(projectsData) && projectsData.length > 0
+        ? projectsData.map(mapSupabaseProject)
+        : initialProjects,
     clients:
       !clientsError && Array.isArray(clientsData) && clientsData.length > 0
         ? clientsData.map(mapSupabaseClient)
@@ -1512,6 +1766,8 @@ const syncSupabaseContent = async ({
   stats,
   settings,
   clients,
+  projects,
+  faqs,
 }: {
   testimonials: Testimonial[];
   services: AdminService[];
@@ -1521,6 +1777,8 @@ const syncSupabaseContent = async ({
   stats: Stat[];
   settings: Record<string, string>;
   clients: Client[];
+  projects: Project[];
+  faqs: Faq[];
 }) => {
   if (!isSupabaseConfigured) return false;
 
@@ -1528,7 +1786,7 @@ const syncSupabaseContent = async ({
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) return false;
 
-    const serviceRows = services.map((service) => ({
+    const serviceRows = services.map((service, index) => ({
       id: service.id,
       icon: service.icon,
       icon_image: service.iconImage || null,
@@ -1538,6 +1796,8 @@ const syncSupabaseContent = async ({
       description: service.description,
       hero_image: service.heroImage,
       product_url: service.productUrl || null,
+      pricing: service.pricing ?? [],
+      sort_order: service.order ?? index,
       status: service.status,
       updated_at: new Date(service.updatedAt || Date.now()).toISOString(),
     }));
@@ -1662,6 +1922,7 @@ const syncSupabaseContent = async ({
         benefits: cs.benefits,
         technologies: cs.technologies,
         workflow: cs.workflow || [],
+        pricing: cs.pricing ?? [],
         status: cs.status,
         sort_order: cs.order,
         updated_at: new Date(cs.updatedAt || Date.now()).toISOString(),
@@ -1747,6 +2008,54 @@ const syncSupabaseContent = async ({
       }
     } catch (clientErr) {
       console.warn("clients sync skipped:", clientErr);
+    }
+
+    try {
+      await pruneRemoved("portfolio_projects", projects.map((p) => p.id));
+      const projectRows = projects.map((project) => ({
+        id: project.id,
+        slug: project.id,
+        name: project.company,
+        client_name: project.company,
+        category: project.category || null,
+        short_description: project.description || "",
+        cover_image: project.image || null,
+        project_url: project.url || null,
+        testimonial: project.testimonial || null,
+        testimonial_author: project.testimonialAuthor || null,
+        sort_order: project.order,
+        status: project.status === "draft" ? "draft" : "published",
+        updated_at: new Date(project.updatedAt || Date.now()).toISOString(),
+      }));
+      if (projectRows.length) {
+        const result = await supabase
+          .from("portfolio_projects")
+          .upsert(projectRows, { onConflict: "id" });
+        if (result.error) throw new Error(result.error.message);
+      }
+    } catch (projectErr) {
+      console.warn("portfolio_projects sync skipped:", projectErr);
+    }
+
+    try {
+      await pruneRemoved("faqs", faqs.map((f) => f.id));
+      const faqRows = faqs.map((item) => ({
+        id: item.id,
+        question: item.question,
+        answer: item.answer,
+        category_id: item.category.toLowerCase(),
+        sort_order: item.order,
+        status: item.status,
+        updated_at: new Date(item.updatedAt || Date.now()).toISOString(),
+      }));
+      if (faqRows.length) {
+        const result = await supabase
+          .from("faqs")
+          .upsert(faqRows, { onConflict: "id" });
+        if (result.error) throw new Error(result.error.message);
+      }
+    } catch (faqErr) {
+      console.warn("faqs sync skipped:", faqErr);
     }
 
     for (const service of services) {
@@ -1840,6 +2149,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] =
     useState<Record<string, string>>(initialSettings);
   const [clients, setClients] = useState<Client[]>(initialClients);
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [faqs, setFaqs] = useState<Faq[]>(initialFaqs);
   const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
   const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
@@ -1860,6 +2171,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (remote.stats) setStats(remote.stats);
             if (remote.settings) setSettings(remote.settings);
             if (remote.clients) setClients(remote.clients);
+            if (remote.projects) setProjects(remote.projects);
+            if (remote.faqs) setFaqs(remote.faqs);
           }
         }
 
@@ -1875,6 +2188,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
               stats?: Stat[];
               settings?: Record<string, string>;
               clients?: Client[];
+              projects?: Project[];
+              faqs?: Faq[];
             };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
@@ -1885,6 +2200,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (content.stats) setStats(content.stats);
             if (content.settings) setSettings(content.settings);
             if (content.clients) setClients(content.clients);
+            if (content.projects) setProjects(content.projects);
+            if (content.faqs) setFaqs(content.faqs);
           }
         }
         const savedPassword = window.localStorage.getItem(PASSWORD_KEY);
@@ -1912,6 +2229,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         stats,
         settings,
         clients,
+        projects,
+        faqs,
       });
       return;
     }
@@ -1927,9 +2246,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         stats,
         settings,
         clients,
+        projects,
+        faqs,
       }),
     );
-  }, [testimonials, services, companyServices, websiteImages, members, stats, settings, clients]);
+  }, [testimonials, services, companyServices, websiteImages, members, stats, settings, clients, projects, faqs]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -2233,6 +2554,82 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setMembers((current) => current.filter((member) => member.id !== id));
   };
 
+  const addFaq = (item: NewFaq) => {
+    setFaqs((current) => [
+      ...current,
+      {
+        ...item,
+        id: genId("faq"),
+        order: current.length ? Math.max(...current.map((f) => f.order)) + 1 : 0,
+        updatedAt: today(),
+      },
+    ]);
+  };
+
+  const updateFaq = (id: string, changes: Partial<Faq>) => {
+    setFaqs((current) =>
+      current.map((f) => (f.id === id ? { ...f, ...changes, updatedAt: today() } : f)),
+    );
+  };
+
+  const deleteFaq = (id: string) => {
+    setFaqs((current) => current.filter((f) => f.id !== id));
+  };
+
+  const reorderFaq = (id: string, direction: "up" | "down") => {
+    setFaqs((current) => {
+      const sorted = [...current].sort((a, b) => a.order - b.order);
+      const index = sorted.findIndex((f) => f.id === id);
+      const swapWith = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || swapWith < 0 || swapWith >= sorted.length) return current;
+      const a = sorted[index];
+      const b = sorted[swapWith];
+      return current.map((f) => {
+        if (f.id === a.id) return { ...f, order: b.order, updatedAt: today() };
+        if (f.id === b.id) return { ...f, order: a.order, updatedAt: today() };
+        return f;
+      });
+    });
+  };
+
+  const addProject = (project: NewProject) => {
+    setProjects((current) => [
+      ...current,
+      {
+        ...project,
+        id: genId("project"),
+        order: current.length ? Math.max(...current.map((p) => p.order)) + 1 : 0,
+        updatedAt: today(),
+      },
+    ]);
+  };
+
+  const updateProject = (id: string, changes: Partial<Project>) => {
+    setProjects((current) =>
+      current.map((p) => (p.id === id ? { ...p, ...changes, updatedAt: today() } : p)),
+    );
+  };
+
+  const deleteProject = (id: string) => {
+    setProjects((current) => current.filter((p) => p.id !== id));
+  };
+
+  const reorderProject = (id: string, direction: "up" | "down") => {
+    setProjects((current) => {
+      const sorted = [...current].sort((a, b) => a.order - b.order);
+      const index = sorted.findIndex((p) => p.id === id);
+      const swapWith = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || swapWith < 0 || swapWith >= sorted.length) return current;
+      const a = sorted[index];
+      const b = sorted[swapWith];
+      return current.map((p) => {
+        if (p.id === a.id) return { ...p, order: b.order, updatedAt: today() };
+        if (p.id === b.id) return { ...p, order: a.order, updatedAt: today() };
+        return p;
+      });
+    });
+  };
+
   const addClient = (client: NewClient) => {
     setClients((current) => [
       ...current,
@@ -2317,6 +2714,26 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  /** Move a product to an explicit 1-based position. */
+  const setServicePosition = (id: string, position: number) => {
+    setServices((current) => {
+      const sorted = [...current].sort(byDisplayOrder);
+      const from = sorted.findIndex((s) => s.id === id);
+      if (from < 0) return current;
+      const to = Math.max(0, Math.min(sorted.length - 1, position - 1));
+      if (from === to) return current;
+      const [moved] = sorted.splice(from, 1);
+      sorted.splice(to, 0, moved);
+      // Renumber densely so positions stay 1..n with no gaps.
+      const orders = new Map(sorted.map((s, index) => [s.id, index]));
+      return current.map((s) => ({
+        ...s,
+        order: orders.get(s.id) ?? s.order,
+        updatedAt: today(),
+      }));
+    });
+  };
+
   const reorderMember = (id: string, direction: "up" | "down") => {
     setMembers((current) => {
       const target = current.find((member) => member.id === id);
@@ -2348,6 +2765,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setStats(initialStats);
     setSettings(initialSettings);
     setClients(initialClients);
+    setProjects(initialProjects);
+    setFaqs(initialFaqs);
   };
 
   const syncContent = () =>
@@ -2360,6 +2779,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       stats,
       settings,
       clients,
+      projects,
+      faqs,
     });
 
   return (
@@ -2397,6 +2818,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         updateSetting,
         clients,
         addClient,
+        projects,
+        addProject,
+        faqs,
+        addFaq,
+        updateFaq,
+        deleteFaq,
+        reorderFaq,
+        updateProject,
+        deleteProject,
+        reorderProject,
         updateClient,
         deleteClient,
         reorderClient,
@@ -2408,6 +2839,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         updateMember,
         deleteMember,
         reorderMember,
+        setServicePosition,
         syncContent,
         resetContent,
       }}

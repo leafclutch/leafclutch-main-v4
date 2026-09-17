@@ -14,6 +14,8 @@ import TestimonialsPanel from "./TestimonialsPanel";
 import WebsiteImagesPanel from "./WebsiteImagesPanel";
 import MembersPanel from "./MembersPanel";
 import StatsPanel from "./StatsPanel";
+import ProjectsPanel from "./ProjectsPanel";
+import FaqsPanel from "./FaqsPanel";
 import SettingsPanel from "./SettingsPanel";
 import CompanyServicesPanel from "./CompanyServicesPanel";
 import CompanyServiceEditorPanel from "./CompanyServiceEditorPanel";
@@ -28,6 +30,8 @@ type Tab =
   | "images"
   | "members"
   | "stats"
+  | "projects"
+  | "faqs"
   | "settings";
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
@@ -38,6 +42,8 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "images", icon: "🖼️", label: "Website Images" },
   { id: "members", icon: "👥", label: "Members" },
   { id: "stats", icon: "📈", label: "Statistics" },
+  { id: "projects", icon: "🗂️", label: "Our Work" },
+  { id: "faqs", icon: "❓", label: "FAQ" },
   { id: "settings", icon: "⚙️", label: "Settings" },
 ];
 
@@ -544,6 +550,8 @@ export default function AdminPanel() {
           {tab === "images" && <WebsiteImagesPanel />}
           {tab === "members" && <MembersPanel />}
           {tab === "stats" && <StatsPanel />}
+          {tab === "projects" && <ProjectsPanel />}
+          {tab === "faqs" && <FaqsPanel />}
           {tab === "settings" && <SettingsPanel />}
         </main>
       </div>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAdmin } from "@/app/context/AdminContext";
-import PricingSection from "@/app/components/ui/PricingSection";
+import PricingSection, { tiersToPlans } from "@/app/components/ui/PricingSection";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
 import ProcessSection from "@/app/components/ui/ProcessSection";
 import { useImageSlider } from "@/app/hooks/useImageSlider";
@@ -150,6 +150,12 @@ export default function ManagedServicePage({
     ]);
 
   // Admin can type "example.com" or a full URL; both must produce a valid href.
+  // Pricing comes from Admin > Products > Edit Product > Pricing; the standard
+  // plans are used until a product defines its own.
+  const pricingPlans = serviceContent.pricing?.length
+    ? tiersToPlans(serviceContent.pricing)
+    : plans;
+
   const rawProductUrl = (serviceContent.productUrl ?? "").trim();
   const productUrl = rawProductUrl
     ? /^https?:\/\//i.test(rawProductUrl)
@@ -388,7 +394,13 @@ export default function ManagedServicePage({
         <div className="svc-devices">
           <div className="svc-laptop">
             <span>● ● ●</span>
-            <b>{serviceContent.icon}</b>
+            <b>
+              {serviceContent.iconImage ? (
+                <img src={serviceContent.iconImage} alt="" loading="lazy" />
+              ) : (
+                serviceContent.icon
+              )}
+            </b>
           </div>
           <div className="svc-phone">✦</div>
           <i>✎</i>
@@ -422,7 +434,7 @@ export default function ManagedServicePage({
         </div>
       </section>
       <div id="pricing" ref={pricingRef}>
-        {showPricing && <PricingSection plans={plans} />}
+        {showPricing && <PricingSection plans={pricingPlans} />}
       </div>
     </div>
   );

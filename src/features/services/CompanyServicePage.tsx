@@ -6,6 +6,7 @@ import { useAdmin } from '@/app/context/AdminContext';
 import { useRevealAll } from '@/app/hooks/useReveal';
 import ServiceArt from '@/app/components/ui/ServiceArt';
 import ProcessSection, { DEFAULT_PROCESS } from '@/app/components/ui/ProcessSection';
+import PricingSection, { tiersToPlans } from '@/app/components/ui/PricingSection';
 
 /**
  * /services/[slug] — detail page for one company service.
@@ -147,6 +148,11 @@ export default function CompanyServicePage({ serviceId }: { serviceId: string })
             </div>
           </div>
         </section>
+      )}
+
+      {/* ── PRICING ── only when this service defines plans in the admin. ── */}
+      {(service.pricing?.length ?? 0) > 0 && (
+        <PricingSection plans={tiersToPlans(service.pricing ?? [])} />
       )}
 
       {/* ── CTA ── */}

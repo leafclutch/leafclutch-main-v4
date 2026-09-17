@@ -1,7 +1,10 @@
 "use client";
 
+import PricingEditor from './PricingEditor';
 import { useState } from "react";
-import { useAdmin, type CompanyService } from "@/app/context/AdminContext";
+import { useAdmin, type CompanyService,
+  type PricingTier,
+} from "@/app/context/AdminContext";
 import { Field, ImageDropzone, StatusPill } from "./shared";
 
 export default function CompanyServiceEditorPanel({
@@ -33,6 +36,7 @@ export default function CompanyServiceEditorPanel({
   const [benefits, setBenefits] = useState<string[]>(service?.benefits ?? []);
   const [newBenefit, setNewBenefit] = useState("");
 
+  const [pricing, setPricing] = useState<PricingTier[]>(service?.pricing ?? []);
   const [technologies, setTechnologies] = useState<string[]>(
     service?.technologies ?? [],
   );
@@ -66,6 +70,7 @@ export default function CompanyServiceEditorPanel({
       features,
       benefits,
       technologies,
+      pricing,
       status,
     });
     setSavedMessage(true);
@@ -431,6 +436,11 @@ export default function CompanyServiceEditorPanel({
             </a>
           </div>
         </div>
+      </div>
+
+      {/* Pricing plans for this service. */}
+      <div className="bg-white rounded-2xl border border-border p-6 mt-5">
+        <PricingEditor tiers={pricing} onChange={setPricing} />
       </div>
     </div>
   );

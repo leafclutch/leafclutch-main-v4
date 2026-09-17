@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import type { PricingTier } from '@/app/context/AdminContext';
+
+/** Admin tiers use `description`/`ctaLabel`; this view wants `desc`/`cta`. */
 interface Plan {
   name: string;
   price: string;
@@ -11,6 +14,19 @@ interface Plan {
   notIncluded?: string[];
   featured?: boolean;
   cta: string;
+}
+
+export function tiersToPlans(tiers: PricingTier[]): Plan[] {
+  return tiers.map(tier => ({
+    name: tier.name,
+    price: tier.price,
+    period: tier.period || undefined,
+    desc: tier.description,
+    features: tier.features,
+    notIncluded: tier.notIncluded,
+    featured: tier.featured,
+    cta: tier.ctaLabel || 'Get Started',
+  }));
 }
 
 const tierMeta = [
