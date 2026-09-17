@@ -9,6 +9,9 @@ import {
 } from "react";
 import { supabase } from "@/lib/supabase";
 import { normalizeMemberLinks, type MemberLink } from "@/lib/memberLinks";
+import { initialBlogPosts, type BlogPost } from "@/lib/blogSeed";
+export { initialBlogPosts, INITIAL_BLOG_SLUGS } from "@/lib/blogSeed";
+export type { BlogPost } from "@/lib/blogSeed";
 
 export type { MemberLink, MemberLinkPlatform } from "@/lib/memberLinks";
 
@@ -227,6 +230,11 @@ type AdminContextValue = {
   addProject: (project: NewProject) => void;
   faqs: Faq[];
   addFaq: (item: NewFaq) => void;
+  blogPosts: BlogPost[];
+  addBlogPost: (post: NewBlogPost) => void;
+  updateBlogPost: (id: string, changes: Partial<BlogPost>) => void;
+  deleteBlogPost: (id: string) => void;
+  reorderBlogPost: (id: string, direction: "up" | "down") => void;
   updateFaq: (id: string, changes: Partial<Faq>) => void;
   deleteFaq: (id: string) => void;
   reorderFaq: (id: string, direction: "up" | "down") => void;
@@ -866,6 +874,22 @@ export const initialFaqs: Faq[] = [
   faq("training-staff", "Support", "Will you train our staff to use the system?",
     "Yes. Handover includes training sessions for your team plus written documentation they can refer back to.", 20),
 ];
+
+export type NewBlogPost = Omit<BlogPost, "id" | "updatedAt" | "order">;
+
+export const BLOG_CATEGORIES = [
+  "Product",
+  "Technology",
+  "Business",
+  "Digital Marketing",
+  "Design",
+  "Company News",
+] as const;
+
+/** Rough reading time, used when the admin leaves the field alone. */
+export const estimateReadMinutes = (text: string) =>
+  Math.max(1, Math.round(text.trim().split(/\s+/).filter(Boolean).length / 200));
+
 
 export const initialSettings: Record<string, string> = {};
 
@@ -1529,6 +1553,25 @@ const toFaqCategory = (raw: unknown): string => {
   return FAQ_CATEGORIES.find((c) => c.toLowerCase() === value) ?? "General";
 };
 
+const mapSupabaseBlog = (row: any): BlogPost => ({
+  id: row.id ?? genId("blog"),
+  slug: row.slug ?? row.id ?? genId("blog"),
+  title: row.title ?? "Untitled",
+  excerpt: row.excerpt ?? "",
+  content: row.content ?? "",
+  coverImage: row.featured_image ?? row.coverImage ?? "",
+  author: row.author ?? row.author_id ?? "Leafclutch Team",
+  category: row.category ?? row.category_id ?? "Company News",
+  tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
+  publishedAt: (row.published_at ?? row.publishedAt ?? today()).slice(0, 10),
+  readMinutes: Number(row.read_minutes ?? row.readMinutes ?? 3),
+  seoTitle: row.seo_title ?? row.seoTitle ?? "",
+  seoDescription: row.seo_description ?? row.seoDescription ?? "",
+  order: Number(row.sort_order ?? row.order ?? 0),
+  status: row.status === "published" || row.status === "active" ? "active" : "draft",
+  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+});
+
 const mapSupabaseFaq = (row: any): Faq => ({
   id: row.id ?? genId("faq"),
   question: row.question ?? "",
@@ -1652,6 +1695,7 @@ const readSupabaseContent = async () => {
     { data: clientsData, error: clientsError },
     { data: projectsData, error: projectsError },
     { data: faqsData, error: faqsError },
+    { data: blogsData, error: blogsError },
   ] = await Promise.all([
     supabase
       .from("services")
@@ -1680,6 +1724,7 @@ const readSupabaseContent = async () => {
       .select("*")
       .order("sort_order", { ascending: true }),
     supabase.from("faqs").select("*").order("sort_order", { ascending: true }),
+    supabase.from("blogs").select("*").order("sort_order", { ascending: true }),
   ]);
 
   const imagesByService = new Map<string, any[]>();
@@ -1734,6 +1779,10 @@ const readSupabaseContent = async () => {
     stats: mergeStats(
       !statsError && Array.isArray(statsData) ? statsData.map(mapSupabaseStat) : [],
     ),
+    blogPosts:
+      !blogsError && Array.isArray(blogsData) && blogsData.length > 0
+        ? blogsData.map(mapSupabaseBlog)
+        : initialBlogPosts,
     faqs:
       !faqsError && Array.isArray(faqsData) && faqsData.length > 0
         ? faqsData.map(mapSupabaseFaq)
@@ -1768,6 +1817,7 @@ const syncSupabaseContent = async ({
   clients,
   projects,
   faqs,
+  blogPosts,
 }: {
   testimonials: Testimonial[];
   services: AdminService[];
@@ -1779,6 +1829,7 @@ const syncSupabaseContent = async ({
   clients: Client[];
   projects: Project[];
   faqs: Faq[];
+  blogPosts: BlogPost[];
 }) => {
   if (!isSupabaseConfigured) return false;
 
@@ -2058,6 +2109,36 @@ const syncSupabaseContent = async ({
       console.warn("faqs sync skipped:", faqErr);
     }
 
+    try {
+      await pruneRemoved("blogs", blogPosts.map((b) => b.id));
+      const blogRows = blogPosts.map((post) => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        featured_image: post.coverImage || null,
+        author: post.author,
+        category: post.category,
+        tags: post.tags,
+        read_minutes: post.readMinutes,
+        published_at: new Date(post.publishedAt).toISOString(),
+        seo_title: post.seoTitle || null,
+        seo_description: post.seoDescription || null,
+        sort_order: post.order,
+        status: post.status === "active" ? "published" : "draft",
+        updated_at: new Date(post.updatedAt || Date.now()).toISOString(),
+      }));
+      if (blogRows.length) {
+        const result = await supabase
+          .from("blogs")
+          .upsert(blogRows, { onConflict: "id" });
+        if (result.error) throw new Error(result.error.message);
+      }
+    } catch (blogErr) {
+      console.warn("blogs sync skipped:", blogErr);
+    }
+
     for (const service of services) {
       const existingFeatureIds = await supabase
         .from("service_features")
@@ -2151,6 +2232,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [faqs, setFaqs] = useState<Faq[]>(initialFaqs);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialBlogPosts);
   const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
   const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
@@ -2173,6 +2255,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (remote.clients) setClients(remote.clients);
             if (remote.projects) setProjects(remote.projects);
             if (remote.faqs) setFaqs(remote.faqs);
+            if (remote.blogPosts) setBlogPosts(remote.blogPosts);
           }
         }
 
@@ -2190,6 +2273,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
               clients?: Client[];
               projects?: Project[];
               faqs?: Faq[];
+              blogPosts?: BlogPost[];
             };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
@@ -2202,6 +2286,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (content.clients) setClients(content.clients);
             if (content.projects) setProjects(content.projects);
             if (content.faqs) setFaqs(content.faqs);
+            if (content.blogPosts) setBlogPosts(content.blogPosts);
           }
         }
         const savedPassword = window.localStorage.getItem(PASSWORD_KEY);
@@ -2231,6 +2316,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         clients,
         projects,
         faqs,
+        blogPosts,
       });
       return;
     }
@@ -2248,9 +2334,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         clients,
         projects,
         faqs,
+        blogPosts,
       }),
     );
-  }, [testimonials, services, companyServices, websiteImages, members, stats, settings, clients, projects, faqs]);
+  }, [testimonials, services, companyServices, websiteImages, members, stats, settings, clients, projects, faqs, blogPosts]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -2554,6 +2641,44 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setMembers((current) => current.filter((member) => member.id !== id));
   };
 
+  const addBlogPost = (post: NewBlogPost) => {
+    setBlogPosts((current) => [
+      ...current,
+      {
+        ...post,
+        id: genId("blog"),
+        order: current.length ? Math.max(...current.map((b) => b.order)) + 1 : 0,
+        updatedAt: today(),
+      },
+    ]);
+  };
+
+  const updateBlogPost = (id: string, changes: Partial<BlogPost>) => {
+    setBlogPosts((current) =>
+      current.map((b) => (b.id === id ? { ...b, ...changes, updatedAt: today() } : b)),
+    );
+  };
+
+  const deleteBlogPost = (id: string) => {
+    setBlogPosts((current) => current.filter((b) => b.id !== id));
+  };
+
+  const reorderBlogPost = (id: string, direction: "up" | "down") => {
+    setBlogPosts((current) => {
+      const sorted = [...current].sort((a, b) => a.order - b.order);
+      const index = sorted.findIndex((b) => b.id === id);
+      const swapWith = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || swapWith < 0 || swapWith >= sorted.length) return current;
+      const a = sorted[index];
+      const b = sorted[swapWith];
+      return current.map((x) => {
+        if (x.id === a.id) return { ...x, order: b.order, updatedAt: today() };
+        if (x.id === b.id) return { ...x, order: a.order, updatedAt: today() };
+        return x;
+      });
+    });
+  };
+
   const addFaq = (item: NewFaq) => {
     setFaqs((current) => [
       ...current,
@@ -2767,6 +2892,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setClients(initialClients);
     setProjects(initialProjects);
     setFaqs(initialFaqs);
+    setBlogPosts(initialBlogPosts);
   };
 
   const syncContent = () =>
@@ -2781,6 +2907,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       clients,
       projects,
       faqs,
+      blogPosts,
     });
 
   return (
@@ -2822,6 +2949,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         addProject,
         faqs,
         addFaq,
+        blogPosts,
+        addBlogPost,
+        updateBlogPost,
+        deleteBlogPost,
+        reorderBlogPost,
         updateFaq,
         deleteFaq,
         reorderFaq,

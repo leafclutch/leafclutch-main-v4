@@ -2437,3 +2437,61 @@ body {
 .faq-list { animation: faqListIn .35s ease-out both; }
 @keyframes faqListIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .faq-list { animation: none; } }
+
+/* ── BLOG ─────────────────────────────────────────────────────────────── */
+.blog-meta { align-items: center; color: #7A879E; display: flex; flex-wrap: wrap; font-size: 12px; font-weight: 600; gap: 8px; }
+.blog-tag { background: #EEF4FF; border-radius: 999px; color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: .06em; padding: 5px 11px; text-transform: uppercase; }
+.blog-media-fallback { align-items: center; color: color-mix(in srgb, var(--primary) 20%, transparent); display: flex; font-size: 3rem; font-weight: 900; height: 100%; justify-content: center; width: 100%; }
+
+.blog-lead {
+  background: #fff; border: 1px solid var(--border); border-radius: 22px;
+  display: grid; gap: 0; overflow: hidden; text-decoration: none;
+  transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s ease, border-color .45s ease;
+}
+@media (min-width: 900px) { .blog-lead { grid-template-columns: 1.15fr 1fr; } }
+.blog-lead-media { aspect-ratio: 16/10; background: #EEF4FF; display: block; overflow: hidden; }
+.blog-lead-media img { height: 100%; object-fit: cover; width: 100%; transition: transform .6s cubic-bezier(.22,1,.36,1); }
+.blog-lead-body { display: flex; flex-direction: column; justify-content: center; padding: 30px; }
+.blog-lead-body h2 { color: var(--primary); font-size: 1.7rem; font-weight: 800; line-height: 1.2; margin: 12px 0 0; transition: color .3s ease; }
+.blog-lead-body p { color: #676F7E; font-size: .95rem; line-height: 1.65; margin: 12px 0 0; }
+
+.blog-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 18px;
+  display: flex; flex-direction: column; overflow: hidden; text-decoration: none;
+  transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s ease, border-color .45s ease;
+}
+.blog-card-media { aspect-ratio: 16/10; background: #EEF4FF; display: block; overflow: hidden; }
+.blog-card-media img { height: 100%; object-fit: cover; width: 100%; transition: transform .6s cubic-bezier(.22,1,.36,1); }
+.blog-card-body { display: flex; flex: 1; flex-direction: column; padding: 20px; }
+.blog-card-body h2 { color: var(--primary); font-size: 1.05rem; font-weight: 800; line-height: 1.35; margin: 10px 0 0; transition: color .3s ease; }
+.blog-card-body p { color: #676F7E; flex: 1; font-size: .86rem; line-height: 1.6; margin: 8px 0 0; }
+
+.blog-more { color: var(--accent); display: inline-flex; font-size: .82rem; font-weight: 800; gap: 7px; margin-top: 16px; }
+.blog-more span { transition: transform .3s cubic-bezier(.22,1,.36,1); }
+
+@media (hover: hover) {
+  .blog-lead:hover, .blog-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    box-shadow: 0 20px 42px rgba(7,32,105,.14);
+  }
+  .blog-lead:hover h2, .blog-card:hover h2 { color: var(--accent); }
+  .blog-lead:hover .blog-more span, .blog-card:hover .blog-more span { transform: translateX(4px); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .blog-lead:hover, .blog-card:hover { transform: translateY(-6px); }
+  .blog-lead:hover img, .blog-card:hover img { transform: scale(1.06); }
+}
+
+/* Long-form body copy — generous measure and rhythm for readability. */
+.blog-body p { color: #37445C; font-size: 1.05rem; line-height: 1.85; margin: 0 0 1.35em; }
+.blog-body h2 { color: var(--primary); font-size: 1.5rem; font-weight: 800; line-height: 1.3; margin: 2.2em 0 .7em; }
+.blog-body ul { margin: 0 0 1.35em; padding-left: 1.3em; }
+.blog-body li { color: #37445C; font-size: 1.02rem; line-height: 1.8; margin-bottom: .45em; }
+.blog-body li::marker { color: var(--accent); }
+
+.blog-share {
+  background: #F1F5F9; border-radius: 10px; color: #4B5670; font-size: 12px;
+  font-weight: 700; padding: 9px 15px; text-decoration: none;
+  transition: background .2s ease, color .2s ease;
+}
+.blog-share:hover { background: var(--primary); color: #fff; }

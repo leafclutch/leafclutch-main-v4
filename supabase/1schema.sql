@@ -269,6 +269,11 @@ create table if not exists public.blogs (
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now()
 );
+-- The admin panel writes these directly rather than juggling foreign keys.
+alter table public.blogs add column if not exists author   text;
+alter table public.blogs add column if not exists category text;
+alter table public.blogs add column if not exists tags     jsonb not null default '[]'::jsonb;
+
 create index if not exists blogs_status_idx    on public.blogs (status, published_at desc);
 create index if not exists blogs_category_idx  on public.blogs (category_id);
 create index if not exists blogs_author_idx    on public.blogs (author_id);

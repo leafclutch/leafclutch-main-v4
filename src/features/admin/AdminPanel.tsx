@@ -16,6 +16,7 @@ import MembersPanel from "./MembersPanel";
 import StatsPanel from "./StatsPanel";
 import ProjectsPanel from "./ProjectsPanel";
 import FaqsPanel from "./FaqsPanel";
+import BlogsPanel from "./BlogsPanel";
 import SettingsPanel from "./SettingsPanel";
 import CompanyServicesPanel from "./CompanyServicesPanel";
 import CompanyServiceEditorPanel from "./CompanyServiceEditorPanel";
@@ -32,6 +33,7 @@ type Tab =
   | "stats"
   | "projects"
   | "faqs"
+  | "blogs"
   | "settings";
 
 const NAV: { id: Tab; icon: string; label: string }[] = [
@@ -43,6 +45,7 @@ const NAV: { id: Tab; icon: string; label: string }[] = [
   { id: "members", icon: "👥", label: "Members" },
   { id: "stats", icon: "📈", label: "Statistics" },
   { id: "projects", icon: "🗂️", label: "Our Work" },
+  { id: "blogs", icon: "📝", label: "Blogs" },
   { id: "faqs", icon: "❓", label: "FAQ" },
   { id: "settings", icon: "⚙️", label: "Settings" },
 ];
@@ -551,6 +554,7 @@ export default function AdminPanel() {
           {tab === "members" && <MembersPanel />}
           {tab === "stats" && <StatsPanel />}
           {tab === "projects" && <ProjectsPanel />}
+          {tab === "blogs" && <BlogsPanel />}
           {tab === "faqs" && <FaqsPanel />}
           {tab === "settings" && <SettingsPanel />}
         </main>
