@@ -323,23 +323,58 @@ body {
 .logo-marquee-wrap:hover .logo-marquee-track { animation-play-state: paused; }
 .logo-marquee-item {
   align-items: center;
-  background: #F8FAFC;
-  border: 1px solid #EEF2F8;
+  background: #fff;
+  border: 1px solid #E4ECF7;
   border-radius: 14px;
-  color: #4B5670;
+  box-shadow: 0 2px 8px rgba(7,32,105,.05);
+  color: var(--primary);
   display: flex;
-  filter: grayscale(1);
   flex-shrink: 0;
   font-size: .82rem;
   font-weight: 700;
   gap: 9px;
   height: 64px;
-  opacity: .6;
   padding: 0 22px;
-  transition: filter .3s ease, opacity .3s ease;
+  position: relative;
+  text-decoration: none;
+  /* Full colour at rest — hover adds emphasis rather than restoring it. */
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease,
+              border-color .35s ease, background .35s ease;
   white-space: nowrap;
 }
-.logo-marquee-item:hover { filter: grayscale(0); opacity: 1; }
+.logo-marquee-item img,
+.logo-marquee-item svg { transition: transform .35s cubic-bezier(.22,1,.36,1); }
+
+/* A brand sheen that wipes across on hover. */
+.logo-marquee-item::after {
+  background: linear-gradient(115deg, transparent 35%, rgba(14,165,235,.22) 50%, transparent 65%);
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-60%);
+}
+
+@media (hover: hover) {
+  .logo-marquee-item:hover {
+    background: #F7FCFF;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    box-shadow: 0 12px 26px rgba(14,165,235,.2);
+  }
+  .logo-marquee-item:hover::after { animation: logoSheen .7s ease-out; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .logo-marquee-item:hover { transform: translateY(-4px) scale(1.04); }
+  .logo-marquee-item:hover img { transform: scale(1.1); }
+  .logo-marquee-item:hover svg { transform: rotate(-8deg) scale(1.15); }
+}
+@keyframes logoSheen {
+  0%   { opacity: 0; transform: translateX(-60%); }
+  35%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(60%); }
+}
 @keyframes logoMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (max-width: 640px) {
   .logo-marquee-item { font-size: .74rem; gap: 7px; height: 54px; padding: 0 16px; }

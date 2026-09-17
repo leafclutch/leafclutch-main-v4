@@ -153,6 +153,11 @@ type AdminContextValue = {
   /** Free-text site copy, keyed by setting name. */
   settings: Record<string, string>;
   updateSetting: (key: string, value: string) => void;
+  clients: Client[];
+  addClient: (client: NewClient) => void;
+  updateClient: (id: string, changes: Partial<Client>) => void;
+  deleteClient: (id: string) => void;
+  reorderClient: (id: string, direction: "up" | "down") => void;
   addStat: (stat: NewStat) => void;
   updateStat: (id: string, changes: Partial<Stat>) => void;
   deleteStat: (id: string) => void;
@@ -634,6 +639,31 @@ const initialWebsiteImages: WebsiteImage[] = [
  * Free-text site copy, stored as key/value rows in `site_settings`.
  * Anything an admin should be able to reword without a deploy lives here.
  */
+/**
+ * §16 Trusted clients / partners — the "Proud to partner with" marquee.
+ * Managed from Admin > Testimonials.
+ */
+export type Client = {
+  id: string;
+  name: string;
+  /** Uploaded logo. Falls back to the initial letter when empty. */
+  logo?: string;
+  websiteUrl?: string;
+  order: number;
+  status: "active" | "draft";
+  updatedAt: string;
+};
+
+export type NewClient = Omit<Client, "id" | "updatedAt" | "order">;
+
+export const initialClients: Client[] = [
+  { id: "himalayan-bistro", name: "Himalayan Bistro",   order: 0, status: "active", updatedAt: today() },
+  { id: "bright-future",    name: "Bright Future",      order: 1, status: "active", updatedAt: today() },
+  { id: "everest-pharmacy", name: "Everest Pharmacy",   order: 2, status: "active", updatedAt: today() },
+  { id: "kathmandu-crafts", name: "Kathmandu Crafts",   order: 3, status: "active", updatedAt: today() },
+  { id: "lumbini-academy",  name: "Lumbini Academy",    order: 4, status: "active", updatedAt: today() },
+];
+
 export const initialSettings: Record<string, string> = {};
 
 export const initialStats: Stat[] = [
@@ -1288,6 +1318,16 @@ const mapSupabaseWebsiteImage = (row: any): WebsiteImage => ({
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
 });
 
+const mapSupabaseClient = (row: any): Client => ({
+  id: row.id ?? genId("client"),
+  name: row.name ?? "Client",
+  logo: row.logo ?? "",
+  websiteUrl: row.website_url ?? row.websiteUrl ?? "",
+  order: Number(row.sort_order ?? row.order ?? 0),
+  status: row.status === "draft" ? "draft" : "active",
+  updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+});
+
 const mapSupabaseStat = (row: any): Stat => {
   // Older rows store the number and its "+"/"%" in separate columns. Fold the
   // suffix into the value so it reads as one number, not "50 + Projects".
@@ -1373,6 +1413,7 @@ const readSupabaseContent = async () => {
     { data: companyServicesData, error: companyServicesError },
     { data: statsData, error: statsError },
     { data: settingsData, error: settingsError },
+    { data: clientsData, error: clientsError },
   ] = await Promise.all([
     supabase.from("services").select("*"),
     supabase.from("service_images").select("*"),
@@ -1392,6 +1433,7 @@ const readSupabaseContent = async () => {
       .order("sort_order", { ascending: true }),
     supabase.from("stats").select("*").order("sort_order", { ascending: true }),
     supabase.from("site_settings").select("*"),
+    supabase.from("clients").select("*").order("sort_order", { ascending: true }),
   ]);
 
   const imagesByService = new Map<string, any[]>();
@@ -1446,6 +1488,10 @@ const readSupabaseContent = async () => {
     stats: mergeStats(
       !statsError && Array.isArray(statsData) ? statsData.map(mapSupabaseStat) : [],
     ),
+    clients:
+      !clientsError && Array.isArray(clientsData) && clientsData.length > 0
+        ? clientsData.map(mapSupabaseClient)
+        : initialClients,
     settings: {
       ...initialSettings,
       ...(!settingsError && Array.isArray(settingsData)
@@ -1465,6 +1511,7 @@ const syncSupabaseContent = async ({
   members,
   stats,
   settings,
+  clients,
 }: {
   testimonials: Testimonial[];
   services: AdminService[];
@@ -1473,6 +1520,7 @@ const syncSupabaseContent = async ({
   members: Member[];
   stats: Stat[];
   settings: Record<string, string>;
+  clients: Client[];
 }) => {
   if (!isSupabaseConfigured) return false;
 
@@ -1680,6 +1728,27 @@ const syncSupabaseContent = async ({
       console.warn("site_settings sync skipped:", settingErr);
     }
 
+    try {
+      await pruneRemoved("clients", clients.map((c) => c.id));
+      const clientRows = clients.map((client) => ({
+        id: client.id,
+        name: client.name,
+        logo: client.logo || null,
+        website_url: client.websiteUrl || null,
+        sort_order: client.order,
+        status: client.status,
+        updated_at: new Date(client.updatedAt || Date.now()).toISOString(),
+      }));
+      if (clientRows.length) {
+        const result = await supabase
+          .from("clients")
+          .upsert(clientRows, { onConflict: "id" });
+        if (result.error) throw new Error(result.error.message);
+      }
+    } catch (clientErr) {
+      console.warn("clients sync skipped:", clientErr);
+    }
+
     for (const service of services) {
       const existingFeatureIds = await supabase
         .from("service_features")
@@ -1770,6 +1839,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [stats, setStats] = useState<Stat[]>(initialStats);
   const [settings, setSettings] =
     useState<Record<string, string>>(initialSettings);
+  const [clients, setClients] = useState<Client[]>(initialClients);
   const [websiteImages, setWebsiteImages] = useState(initialWebsiteImages);
   const [members, setMembers] = useState(initialMembers);
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
@@ -1789,6 +1859,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             setMembers(remote.members);
             if (remote.stats) setStats(remote.stats);
             if (remote.settings) setSettings(remote.settings);
+            if (remote.clients) setClients(remote.clients);
           }
         }
 
@@ -1803,6 +1874,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
               members?: Member[];
               stats?: Stat[];
               settings?: Record<string, string>;
+              clients?: Client[];
             };
             if (content.testimonials) setTestimonials(content.testimonials);
             if (content.services) setServices(content.services);
@@ -1812,6 +1884,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             if (content.members) setMembers(content.members);
             if (content.stats) setStats(content.stats);
             if (content.settings) setSettings(content.settings);
+            if (content.clients) setClients(content.clients);
           }
         }
         const savedPassword = window.localStorage.getItem(PASSWORD_KEY);
@@ -1838,6 +1911,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         members,
         stats,
         settings,
+        clients,
       });
       return;
     }
@@ -1852,9 +1926,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         members,
         stats,
         settings,
+        clients,
       }),
     );
-  }, [testimonials, services, companyServices, websiteImages, members, stats, settings]);
+  }, [testimonials, services, companyServices, websiteImages, members, stats, settings, clients]);
 
   const setAdminPassword = (password: string) => {
     setAdminPasswordState(password);
@@ -2158,6 +2233,46 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setMembers((current) => current.filter((member) => member.id !== id));
   };
 
+  const addClient = (client: NewClient) => {
+    setClients((current) => [
+      ...current,
+      {
+        ...client,
+        id: genId("client"),
+        order: current.length ? Math.max(...current.map((c) => c.order)) + 1 : 0,
+        updatedAt: today(),
+      },
+    ]);
+  };
+
+  const updateClient = (id: string, changes: Partial<Client>) => {
+    setClients((current) =>
+      current.map((client) =>
+        client.id === id ? { ...client, ...changes, updatedAt: today() } : client,
+      ),
+    );
+  };
+
+  const deleteClient = (id: string) => {
+    setClients((current) => current.filter((client) => client.id !== id));
+  };
+
+  const reorderClient = (id: string, direction: "up" | "down") => {
+    setClients((current) => {
+      const sorted = [...current].sort((a, b) => a.order - b.order);
+      const index = sorted.findIndex((c) => c.id === id);
+      const swapWith = direction === "up" ? index - 1 : index + 1;
+      if (index < 0 || swapWith < 0 || swapWith >= sorted.length) return current;
+      const a = sorted[index];
+      const b = sorted[swapWith];
+      return current.map((c) => {
+        if (c.id === a.id) return { ...c, order: b.order, updatedAt: today() };
+        if (c.id === b.id) return { ...c, order: a.order, updatedAt: today() };
+        return c;
+      });
+    });
+  };
+
   const updateSetting = (key: string, value: string) => {
     setSettings((current) => ({ ...current, [key]: value }));
   };
@@ -2232,6 +2347,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setMembers(initialMembers);
     setStats(initialStats);
     setSettings(initialSettings);
+    setClients(initialClients);
   };
 
   const syncContent = () =>
@@ -2243,6 +2359,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       members,
       stats,
       settings,
+      clients,
     });
 
   return (
@@ -2278,6 +2395,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         stats,
         settings,
         updateSetting,
+        clients,
+        addClient,
+        updateClient,
+        deleteClient,
+        reorderClient,
         addStat,
         updateStat,
         deleteStat,

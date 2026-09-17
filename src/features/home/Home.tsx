@@ -189,94 +189,6 @@ const provinceHubs = [
   },
 ];
 
-const trustedLogos = [
-  {
-    key: "himalayan-bistro",
-    name: "Himalayan Bistro",
-    icon: (
-      <>
-        <path d="M6 2v7a2 2 0 002 2h0a2 2 0 002-2V2M8 11v11" />
-        <path d="M16 2c-1.5 2-1.5 6 0 8s1.5 0 1.5 0V2z" />
-      </>
-    ),
-  },
-  {
-    key: "bright-future",
-    name: "Bright Future Academy",
-    icon: (
-      <>
-        <path d="M12 3L2 8l10 5 10-5-10-5z" />
-        <path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5" />
-      </>
-    ),
-  },
-  {
-    key: "kantipur-digital",
-    name: "Kantipur Digital",
-    icon: (
-      <>
-        <rect x="3" y="4" width="18" height="12" rx="2" />
-        <path d="M2 20h20" />
-      </>
-    ),
-  },
-  {
-    key: "medicare-pharmacy",
-    name: "MediCare Pharmacy",
-    icon: (
-      <>
-        <rect
-          x="4.5"
-          y="4.5"
-          width="15"
-          height="15"
-          rx="7.5"
-          transform="rotate(45 12 12)"
-        />
-        <path d="M8.5 15.5l7-7" />
-      </>
-    ),
-  },
-  {
-    key: "sagarmatha-school",
-    name: "Sagarmatha School",
-    icon: (
-      <>
-        <path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" />
-        <path d="M9 12l2 2 4-4" />
-      </>
-    ),
-  },
-  {
-    key: "everest-it",
-    name: "Everest IT Academy",
-    icon: (
-      <>
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <path d="M7 9h10M7 13h7" />
-      </>
-    ),
-  },
-  {
-    key: "annapurna-foods",
-    name: "Annapurna Foods",
-    icon: (
-      <>
-        <path d="M8 21h8M9 21v-5M15 21v-5M6 10a4 4 0 018-1.8A4 4 0 0118 10c0 2-1.5 3.5-3 4.2V16H9v-1.8C7.5 13.5 6 12 6 10z" />
-      </>
-    ),
-  },
-  {
-    key: "pokhara-health",
-    name: "Pokhara Health Clinic",
-    icon: (
-      <>
-        <path d="M12 21c4-3 7-6.5 7-11a7 7 0 10-14 0c0 4.5 3 8 7 11z" />
-        <circle cx="12" cy="10" r="2.6" />
-      </>
-    ),
-  },
-];
 
 export default function Home() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(true);
@@ -286,7 +198,7 @@ export default function Home() {
   const servicesScrollBoxRef = useRef<HTMLDivElement>(null);
   const servicePageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [activeService, setActiveService] = useState(0);
-  const { services: managedServices, stats } = useAdmin();
+  const { services: managedServices, stats, clients } = useAdmin();
 
   // Shared company metrics, managed in Admin > Statistics. The hero bar and the
   // "Our Journey" cards both read this, so one edit updates both.
@@ -303,6 +215,11 @@ export default function Home() {
   // slots are the SAME shared rows the hero uses, so the numbers cannot drift
   // apart. Any extra "nepal" rows are ignored rather than shown twice.
   const byOrder = (a: Stat, b: Stat) => a.order - b.order;
+
+  // §16 "Proud to partner with" strip — Admin > Testimonials > Partners.
+  const marqueePartners = clients
+    .filter((c) => c.status === "active")
+    .sort((a, b) => a.order - b.order);
   const nepalStats = [
     ...stats
       .filter((s) => s.status === "active" && s.context === "nepal")
@@ -970,22 +887,51 @@ export default function Home() {
         </p>
         <div className="logo-marquee-wrap">
           <div className="logo-marquee-track">
-            {[...trustedLogos, ...trustedLogos].map((logo, i) => (
-              <div key={`${logo.key}-${i}`} className="logo-marquee-item">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.7}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5 shrink-0"
+            {[...marqueePartners, ...marqueePartners].map((partner, i) => {
+              const inner = (
+                <>
+                  {partner.logo ? (
+                    <img
+                      src={partner.logo}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-6 w-auto max-w-[96px] object-contain shrink-0"
+                    />
+                  ) : (
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-5 h-5 shrink-0"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 21V8l9-5 9 5v13" />
+                      <path d="M9 21v-6h6v6" />
+                    </svg>
+                  )}
+                  <span>{partner.name}</span>
+                </>
+              );
+              return partner.websiteUrl ? (
+                <a
+                  key={`${partner.id}-${i}`}
+                  href={partner.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="logo-marquee-item"
                 >
-                  {logo.icon}
-                </svg>
-                <span>{logo.name}</span>
-              </div>
-            ))}
+                  {inner}
+                </a>
+              ) : (
+                <div key={`${partner.id}-${i}`} className="logo-marquee-item">
+                  {inner}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
