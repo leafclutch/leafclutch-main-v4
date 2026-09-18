@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "typecheck": "tsc --noEmit",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
+    "build:next": "next build",
     "start": "next start",
     "format": "oxfmt",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

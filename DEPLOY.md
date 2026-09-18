@@ -61,14 +61,23 @@ nobody else can create an account.
 ## Building on Cloudflare (Git integration)
 
 If Cloudflare builds from the repository rather than you running `npm run deploy`
-locally, set these under **Workers & Pages → leafclutch-website → Settings →
-Build**:
+locally, the stock Workers Builds settings work as-is:
 
 | Setting | Value |
 |---|---|
-| Build command | `npx opennextjs-cloudflare build` |
+| Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
-| Version / package manager | npm (driven by `package-lock.json`) |
+| Package manager | npm (driven by `package-lock.json`) |
+
+`npm run build` is `opennextjs-cloudflare build`, not a bare `next build`, so it
+produces the `.open-next/` Worker bundle that `wrangler deploy` needs. A plain
+`next build` only writes `.next/`, and the deploy then fails with *"Could not
+find compiled Open Next config"*. Use `npm run build:next` if you ever want the
+Next.js build on its own.
+
+Because OpenNext shells out to `npm run build` by default, `open-next.config.ts`
+sets `buildCommand: 'next build'` — without it the two would call each other
+forever.
 
 The repository keeps a single lockfile, `package-lock.json`. Do not add a
 `pnpm-lock.yaml` or a `yarn.lock` — Cloudflare picks its package manager from
