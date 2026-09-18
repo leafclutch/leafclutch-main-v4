@@ -186,6 +186,15 @@ function NewServiceForm({
   );
 }
 
+/**
+ * The built-in admin password works in development only.
+ *
+ * In production every sign-in must go through Supabase Auth, so create an
+ * admin user under Authentication > Users before deploying, and keep email
+ * sign-ups disabled.
+ */
+const ALLOW_LOCAL_PASSWORD = process.env.NODE_ENV !== "production";
+
 export default function AdminPanel() {
   const {
     services,
@@ -230,7 +239,9 @@ export default function AdminPanel() {
         });
 
       if (signInError || !data.user) {
-        if (password === adminPassword) {
+        // Local-only escape hatch. It grants no Supabase session, so it cannot
+        // write anything — but it must never be reachable on the live site.
+        if (ALLOW_LOCAL_PASSWORD && password === adminPassword) {
           setAuthenticated(true);
           return;
         }
@@ -242,7 +253,7 @@ export default function AdminPanel() {
       setError("");
       await syncContent();
     } catch {
-      if (password === adminPassword) {
+      if (ALLOW_LOCAL_PASSWORD && password === adminPassword) {
         setAuthenticated(true);
         return;
       }
@@ -340,7 +351,7 @@ export default function AdminPanel() {
             </div>
             <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Leafclutch Technology
+              Leafclutch Technologies
             </p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -393,13 +404,13 @@ export default function AdminPanel() {
         <div className="p-5 border-b border-white/10 flex items-center gap-3">
           <Image
             src={logoImg}
-            alt="Leafclutch Technology"
+            alt="Leafclutch Technologies"
             width={36}
             height={36}
             className="h-9 w-9 rounded-lg object-contain bg-white/5 p-1"
           />
           <div className="min-w-0">
-            <p className="font-bold text-sm truncate">Leafclutch Technology</p>
+            <p className="font-bold text-sm truncate">Leafclutch Technologies</p>
             <p className="text-gray-400 text-[11px]">Admin Panel</p>
           </div>
         </div>
@@ -461,7 +472,7 @@ export default function AdminPanel() {
           </p>
         </div>
         <p className="text-[11px] text-gray-500 text-center pb-4">
-          © {new Date().getFullYear()} Leafclutch Technology · Admin Panel
+          © {new Date().getFullYear()} Leafclutch Technologies · Admin Panel
         </p>
       </aside>
 

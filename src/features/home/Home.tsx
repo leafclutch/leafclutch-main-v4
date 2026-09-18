@@ -767,7 +767,7 @@ export default function Home() {
                 <div className="why-badge-wrap">
                   <img
                     src="/2expyear.png"
-                    alt="Leafclutch Technology — 5 Years of Excellence"
+                    alt="Leafclutch Technologies — 5 Years of Excellence"
                     className="why-badge-img"
                   />
                   <span className="why-badge-shine" aria-hidden="true" />
@@ -1032,7 +1032,7 @@ export default function Home() {
             <div className="contact-popup-copy">
               <img
                 src={logoImg}
-                alt="Leafclutch Technology"
+                alt="Leafclutch Technologies"
                 className="contact-popup-logo"
               />
               <span className="contact-popup-kicker">Have a question?</span>

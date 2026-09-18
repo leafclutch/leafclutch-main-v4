@@ -4,7 +4,7 @@ interface Props {
   onComplete: () => void;
 }
 
-const BRAND_TEXT = 'LEAFCLUTCH TECHNOLOGY';
+const BRAND_TEXT = 'LEAFCLUTCH TECHNOLOGIES';
 const LETTER_DELAY = 0.02;
 const HOLD_MS = 60;
 
