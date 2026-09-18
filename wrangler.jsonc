@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "leafclutch-website",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-09-01",
+  // nodejs_compat is required by the Next.js runtime and the Supabase client.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://leafclutch.com.np"
+  }
+  // IMPORTANT: NEXT_PUBLIC_* values are inlined into the bundle at BUILD time,
+  // so they must be present in the build environment — a Worker secret is too
+  // late. Only server-only values work as runtime secrets:
+  //   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+  //
+  // Custom domains are attached in the Cloudflare dashboard
+  // (Workers & Pages > leafclutch-website > Settings > Domains & Routes):
+  //   leafclutch.com.np
+  //   www.leafclutch.com.np
+}

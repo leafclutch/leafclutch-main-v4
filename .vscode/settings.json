@@ -1,0 +1,22 @@
+{
+  // Tailwind v4 introduces at-rules (@theme, @utility, @custom-variant) that
+  // the editor's built-in CSS validator does not recognise, so it reports them
+  // as errors. PostCSS compiles them correctly — the warnings are false.
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+  "css.lint.unknownAtRules": "ignore",
+
+  // wrangler.jsonc is JSON with comments.
+  "files.associations": {
+    "wrangler.jsonc": "jsonc",
+    "*.css": "tailwindcss"
+  },
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "search.exclude": {
+    "**/.next": true,
+    "**/.open-next": true,
+    "**/.wrangler": true
+  }
+}

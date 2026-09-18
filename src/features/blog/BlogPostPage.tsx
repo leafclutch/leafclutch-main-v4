@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAdmin } from '@/app/context/AdminContext';
 import type { BlogPost } from '@/lib/blogSeed';
+import { SITE_URL } from '@/lib/site';
 import { useRevealAll } from '@/app/hooks/useReveal';
 import { parseBlogContent, formatBlogDate } from './blogContent';
 
@@ -32,7 +33,7 @@ export default function BlogPostPage({
     .filter(p => p.status === 'active' && p.id !== post.id)
     .slice(0, 3);
 
-  const shareUrl = `https://leafclutchtech.com.np/blogs/${post.slug}`;
+  const shareUrl = `${SITE_URL}/blogs/${post.slug}`;
   const shares = [
     { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}` },
     { name: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}` },

@@ -8,8 +8,8 @@ import { createClient } from '@supabase/supabase-js';
  * Supabase directly during the server render so titles, descriptions and the
  * sitemap are correct in the initial HTML.
  */
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://leafclutchtech.com.np';
+export { SITE_URL } from './site';
+import { SITE_URL } from './site';
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

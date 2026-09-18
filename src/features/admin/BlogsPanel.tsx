@@ -9,8 +9,9 @@ import {
   type NewBlogPost,
 } from '@/app/context/AdminContext';
 import { ConfirmDialog, Field, FieldGroup, ImageDropzone, Modal } from './shared';
+import { SITE_URL as SITE } from '@/lib/site';
 
-const SITE = 'https://leafclutchtech.com.np';
+
 
 /** Title -> URL slug, the same shape the public route expects. */
 const slugify = (text: string) =>
