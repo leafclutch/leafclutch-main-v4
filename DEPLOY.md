@@ -45,6 +45,41 @@ Cloudflare (Workers Builds / CI), add the three `NEXT_PUBLIC_*` values as
 
 ---
 
+### 4. Create the admin account (do this before you deploy)
+
+The admin panel signs in through Supabase Auth. The hardcoded development
+password only works when `NODE_ENV !== 'production'`, so **in production there
+is no way in until a real user exists.**
+
+In the Supabase dashboard: **Authentication → Users → Add user**, tick
+*Auto Confirm User*, and set an email and password. Then
+**Authentication → Providers → Email** and turn *Enable sign-ups* **off**, so
+nobody else can create an account.
+
+---
+
+## Building on Cloudflare (Git integration)
+
+If Cloudflare builds from the repository rather than you running `npm run deploy`
+locally, set these under **Workers & Pages → leafclutch-website → Settings →
+Build**:
+
+| Setting | Value |
+|---|---|
+| Build command | `npx opennextjs-cloudflare build` |
+| Deploy command | `npx wrangler deploy` |
+| Version / package manager | npm (driven by `package-lock.json`) |
+
+The repository keeps a single lockfile, `package-lock.json`. Do not add a
+`pnpm-lock.yaml` or a `yarn.lock` — Cloudflare picks its package manager from
+whichever lockfile it finds, and a second, stale one makes the build fail with
+`ERR_PNPM_OUTDATED_LOCKFILE` before it ever reaches Next.js.
+
+Remember that the three `NEXT_PUBLIC_*` values from the table above must be
+added as **build** variables here, not as Worker secrets.
+
+---
+
 ## Deploy
 
 ```bash

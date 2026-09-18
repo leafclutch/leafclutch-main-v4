@@ -531,7 +531,7 @@ export default function AdminPanel() {
           </div>
         </header>
 
-        <main className="flex-1 p-6 max-w-[1400px] w-full">
+        <main className="flex-1 p-6 max-w-350 w-full">
           {tab === "dashboard" && (
             <DashboardPanel
               onNavigate={(next) =>

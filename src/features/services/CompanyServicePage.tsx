@@ -33,12 +33,12 @@ export default function CompanyServicePage({ serviceId }: { serviceId: string })
           <Link href="/services" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-accent transition-colors">
             <span aria-hidden="true">←</span> All Services
           </Link>
-          <span className="mx-auto mt-6 flex h-[180px] items-center justify-center">
+          <span className="mx-auto mt-6 flex h-45 items-center justify-center">
             <ServiceArt
               serviceId={service.id}
               icon={service.icon}
               iconImage={service.iconImage}
-              className="h-[180px] w-auto"
+              className="h-45 w-auto"
             />
           </span>
           <h1 className="mt-6 text-4xl lg:text-5xl font-extrabold text-[#0F1729] leading-tight text-balance">

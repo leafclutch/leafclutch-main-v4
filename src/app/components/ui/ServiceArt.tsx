@@ -31,7 +31,7 @@ export default function ServiceArt({
   serviceId,
   icon,
   iconImage,
-  className = 'h-[120px] w-auto',
+  className = 'h-30 w-auto',
   fallbackClassName = 'text-5xl',
 }: {
   serviceId: string;

@@ -141,9 +141,9 @@ const PHOTO_HOVER =
 
 function FounderCard({ member }: { member: Member }) {
   return (
-    <div className="reveal w-full max-w-[500px] mx-auto">
+    <div className="reveal w-full max-w-125 mx-auto">
       <div
-        className={`aspect-square w-full max-w-[400px] rounded-2xl overflow-hidden bg-secondary shadow-sm ${PHOTO_HOVER}`}
+        className={`aspect-square w-full max-w-100 rounded-2xl overflow-hidden bg-secondary shadow-sm ${PHOTO_HOVER}`}
       >
         <MemberPhoto member={member} />
       </div>
@@ -160,7 +160,7 @@ function TeamCard({ member }: { member: Member }) {
   return (
     <div className="reveal text-center">
       <div
-        className={`aspect-[4/5] rounded-2xl overflow-hidden bg-secondary shadow-sm ${PHOTO_HOVER}`}
+        className={`aspect-4/5 rounded-2xl overflow-hidden bg-secondary shadow-sm ${PHOTO_HOVER}`}
       >
         <MemberPhoto member={member} />
       </div>
@@ -398,7 +398,7 @@ export default function AboutPage() {
                 specialists committed to transforming how businesses operate.
               </p>
             </div>
-            <div className="grid sm:grid-cols-2 gap-8 sm:gap-10 max-w-[1040px] mx-auto mt-12">
+            <div className="grid sm:grid-cols-2 gap-8 sm:gap-10 max-w-260 mx-auto mt-12">
               {founders.map((member) => (
                 <FounderCard key={member.id} member={member} />
               ))}

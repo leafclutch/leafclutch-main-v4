@@ -47,12 +47,12 @@ export default function ServicesIndexPage() {
                   href={`/services/${service.id}`}
                   className="group reveal flex flex-col rounded-2xl border border-border bg-white p-6 text-center shadow-sm transition-[translate,box-shadow] duration-500 ease-out hover:shadow-xl motion-safe:hover:-translate-y-1"
                 >
-                  <span className="flex h-[120px] items-center justify-center">
+                  <span className="flex h-30 items-center justify-center">
                     <ServiceArt
                       serviceId={service.id}
                       icon={service.icon}
                       iconImage={service.iconImage}
-                      className="h-[120px] w-auto transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
+                      className="h-30 w-auto transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
                     />
                   </span>
                   <h2 className="mt-4 text-lg font-bold text-[#0F1729] transition-colors group-hover:text-accent">

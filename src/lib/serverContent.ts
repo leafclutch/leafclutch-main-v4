@@ -112,3 +112,69 @@ export async function getFaqs(): Promise<ServerFaq[]> {
       }));
   }, []);
 }
+
+export type ServerProduct = {
+  slug: string;
+  title: string;
+  label: string;
+  heading: string;
+  description: string;
+  heroImage: string;
+  iconImage: string;
+  icon: string;
+  status: string;
+};
+
+/** Products (the `services` table) for page metadata and the SSR shell. */
+export async function getProduct(slug: string): Promise<ServerProduct | null> {
+  return safe(async () => {
+    const { data, error } = await client!
+      .from('services')
+      .select('*')
+      .eq('id', slug)
+      .maybeSingle();
+    if (error || !data || data.status === 'draft') return null;
+    return {
+      slug: String(data.id),
+      title: String(data.title ?? ''),
+      label: String(data.label ?? ''),
+      heading: String(data.heading ?? ''),
+      description: String(data.description ?? ''),
+      heroImage: String(data.hero_image ?? ''),
+      iconImage: String(data.icon_image ?? ''),
+      icon: String(data.icon ?? 'service'),
+      status: String(data.status ?? 'active'),
+    };
+  }, null);
+}
+
+export type ServerCompanyService = {
+  slug: string;
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  coverImage: string;
+  iconImage: string;
+};
+
+/** Company services (the `company_services` table) for page metadata. */
+export async function getCompanyService(
+  slug: string,
+): Promise<ServerCompanyService | null> {
+  return safe(async () => {
+    const { data, error } = await client!
+      .from('company_services')
+      .select('*')
+      .eq('id', slug)
+      .maybeSingle();
+    if (error || !data || data.status === 'draft') return null;
+    return {
+      slug: String(data.id),
+      title: String(data.title ?? ''),
+      shortDescription: String(data.short_description ?? ''),
+      fullDescription: String(data.full_description ?? ''),
+      coverImage: String(data.cover_image ?? ''),
+      iconImage: String(data.icon_image ?? ''),
+    };
+  }, null);
+}

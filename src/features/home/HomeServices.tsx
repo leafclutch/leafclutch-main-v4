@@ -31,14 +31,14 @@ export default function HomeServices() {
           {services.map(service => (
             <article
               key={service.id}
-              className="group reveal relative flex flex-col overflow-hidden rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/[0.04] transition-[translate,box-shadow] duration-500 ease-out hover:shadow-xl motion-safe:hover:-translate-y-1.5"
+              className="group reveal relative flex flex-col overflow-hidden rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-black/4 transition-[translate,box-shadow] duration-500 ease-out hover:shadow-xl motion-safe:hover:-translate-y-1.5"
             >
-              <div className="flex h-[128px] items-center justify-center">
+              <div className="flex h-32 items-center justify-center">
                 <ServiceArt
                   serviceId={service.id}
                   icon={service.icon}
                   iconImage={service.iconImage}
-                  className="h-[128px] w-auto transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
+                  className="h-32 w-auto transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
                 />
               </div>
 

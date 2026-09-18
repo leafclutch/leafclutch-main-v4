@@ -220,11 +220,11 @@ export default function ContactPage() {
               {/* Two ways to send the same message. */}
               <div className="grid gap-3 sm:grid-cols-2 pt-1">
                 <button type="submit" className="contact-send contact-send-mail">
-                  <Icon path={ICONS.mail} className="h-[18px] w-[18px]" />
+                  <Icon path={ICONS.mail} className="h-4.5 w-4.5" />
                   Send via Email
                 </button>
                 <button type="button" onClick={sendByWhatsApp} className="contact-send contact-send-wa">
-                  <Icon path={ICONS.chat} className="h-[18px] w-[18px]" />
+                  <Icon path={ICONS.chat} className="h-4.5 w-4.5" />
                   Send via WhatsApp
                 </button>
               </div>
@@ -274,7 +274,7 @@ export default function ContactPage() {
                 Call us during business hours and speak to the team directly.
               </p>
               <a href={`tel:${PHONE_TEL}`} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#072069] transition-transform hover:-translate-y-0.5">
-                <Icon path={ICONS.phone} className="h-[18px] w-[18px]" />
+                <Icon path={ICONS.phone} className="h-4.5 w-4.5" />
                 {PHONE_DISPLAY}
               </a>
             </div>
@@ -292,7 +292,7 @@ export default function ContactPage() {
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               allowFullScreen
-              className="h-[380px] w-full border-0 lg:h-[440px]"
+              className="h-95 w-full border-0 lg:h-110"
             />
           </div>
         </div>

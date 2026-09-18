@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useAdmin } from "@/app/context/AdminContext";
+import { useAdmin, type AdminService } from "@/app/context/AdminContext";
 import PricingSection, { tiersToPlans } from "@/app/components/ui/PricingSection";
 import TestimonialSection from "@/app/components/ui/TestimonialSection";
 import ProcessSection from "@/app/components/ui/ProcessSection";
@@ -63,13 +63,20 @@ function StatusBadge({ value }: { value: string }) {
 
 export default function ManagedServicePage({
   serviceId,
+  serverProduct = null,
 }: {
   serviceId: string;
+  /**
+   * Resolved from Supabase during the server render. Used until AdminContext
+   * has loaded, so the first paint (and anything a crawler sees) is the real
+   * product rather than the "not found" placeholder.
+   */
+  serverProduct?: AdminService | null;
 }) {
   const { services: managedServices } = useAdmin();
-  const serviceContent = managedServices.find(
-    (service) => service.id === serviceId,
-  );
+  const serviceContent =
+    managedServices.find((service) => service.id === serviceId) ??
+    (serverProduct?.id === serviceId ? serverProduct : undefined);
   const [activeFeature, setActiveFeature] = useState(0);
   const [showPricing, setShowPricing] = useState(false);
   const pricingRef = useRef<HTMLDivElement>(null);

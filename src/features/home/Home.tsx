@@ -355,7 +355,7 @@ export default function Home() {
       {/* ── HERO ── orbiting services scene */}
       <section className="hero2 relative overflow-hidden min-h-dvh flex flex-col justify-center">
         <div className="hero2-backdrop absolute inset-0" aria-hidden="true">
-          <div className="absolute inset-0 hero-grid opacity-[0.35]" />
+          <div className="absolute inset-0 hero-grid opacity-35" />
         </div>
 
         <span className="hero2-note note-a" aria-hidden="true">
@@ -751,7 +751,7 @@ export default function Home() {
         id="our-story"
         className="why-us-section relative overflow-hidden bg-[#F8FAFC] py-8 lg:py-10"
       >
-        <div className="absolute inset-0 hero-grid opacity-[0.22]" />
+        <div className="absolute inset-0 hero-grid opacity-22" />
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div
             ref={whyIntroRef}
@@ -912,7 +912,7 @@ export default function Home() {
                       alt=""
                       loading="lazy"
                       decoding="async"
-                      className="h-6 w-auto max-w-[96px] object-contain shrink-0"
+                      className="h-6 w-auto max-w-24 object-contain shrink-0"
                     />
                   ) : (
                     <svg
