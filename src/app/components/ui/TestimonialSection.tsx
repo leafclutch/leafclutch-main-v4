@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '@/app/context/AdminContext';
 import { useReveal } from '@/app/hooks/useReveal';
+import InstagramEmbed from './InstagramEmbed';
 
 interface Props {
   service?: string;
@@ -154,7 +155,14 @@ export default function TestimonialSection({ service }: Props) {
                   ref={el => { cardRefs.current[i] = el; }}
                   onClick={() => goToCard(i)}
                 >
-                  {t.photo ? (
+                  {/* An Instagram embed is an iframe, which would swallow the
+                      drag gesture and cost a request per card. Only the card
+                      in focus gets one; the rest keep the cheap image. */}
+                  {t.embedUrl && i === active ? (
+                    <div className="tf-card-embed" onPointerDown={e => e.stopPropagation()}>
+                      <InstagramEmbed url={t.embedUrl} caption={t.name} />
+                    </div>
+                  ) : t.photo ? (
                     <img src={t.photo} alt={t.name} draggable={false} />
                   ) : (
                     <div className="tf-card-fallback">{initialsOf(t.name)}</div>

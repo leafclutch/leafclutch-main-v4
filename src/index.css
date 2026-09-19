@@ -2495,3 +2495,39 @@ body {
   transition: background .2s ease, color .2s ease;
 }
 .blog-share:hover { background: var(--primary); color: #fff; }
+
+/* --- Instagram embeds in testimonials -------------------------------------
+   Only the focused testimonial card renders a real embed, so these rules just
+   have to keep Instagram's widget inside the card's rounded frame. */
+.tf-card-embed {
+  background: #fff;
+  height: 100%;
+  overflow: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+.tf-card-embed .instagram-media {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+/* Shown while the widget loads, and whenever a blocker stops it loading at
+   all, so the card is never empty. */
+.ig-embed-fallback {
+  align-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  height: 100%;
+  justify-content: center;
+  line-height: 1.4;
+  padding: 16px;
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+}
+.ig-embed-fallback:hover { text-decoration: underline; }
