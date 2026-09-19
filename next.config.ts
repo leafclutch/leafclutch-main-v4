@@ -18,7 +18,10 @@ const CSP = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "script-src 'self' 'unsafe-inline'",
+  // `next dev` compiles modules with eval-based source maps and React Refresh,
+  // so development needs 'unsafe-eval' or the whole bundle fails to evaluate.
+  // The production build does not, and does not get it.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
