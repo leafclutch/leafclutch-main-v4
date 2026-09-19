@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import BlogPostPage from '@/features/blog/BlogPostPage';
 import { INITIAL_BLOG_SLUGS } from '@/lib/blogSeed';
 import { getBlogPost, SITE_URL } from '@/lib/serverContent';
+import { jsonLd as toJsonLd } from '@/lib/jsonLd';
 
 /**
  * Metadata is resolved on the server so crawlers and link previews get a real
@@ -79,7 +80,7 @@ export default async function BlogPostRoute({
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
         />
       )}
       <BlogPostPage

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import FaqPage from '@/features/faq/FaqPage';
 import { SITE_URL, getFaqs } from '@/lib/serverContent';
+import { jsonLd as toJsonLd } from '@/lib/jsonLd';
 
 export const metadata: Metadata = {
   title: 'FAQ',
@@ -36,7 +37,7 @@ export default async function FaqRoute() {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
         />
       )}
       <FaqPage />

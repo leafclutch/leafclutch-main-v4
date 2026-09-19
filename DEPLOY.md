@@ -45,7 +45,13 @@ Cloudflare (Workers Builds / CI), add the three `NEXT_PUBLIC_*` values as
 
 ---
 
-### 4. Create the admin account (do this before you deploy)
+### 4. Apply the security hardening (do this first)
+
+Run `supabase/14security.sql`, turn off sign-ups, and add the Cloudflare rate
+limiting rules. Without the SQL file, any stranger can register an account and
+edit the site's content. See [SECURITY.md](SECURITY.md) for the detail.
+
+### 5. Create the admin account (do this before you deploy)
 
 The admin panel signs in through Supabase Auth. The hardcoded development
 password only works when `NODE_ENV !== 'production'`, so **in production there

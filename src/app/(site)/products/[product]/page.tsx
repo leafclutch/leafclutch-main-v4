@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ManagedServicePage from '@/features/services/ManagedServicePage';
 import { getProduct, SITE_URL } from '@/lib/serverContent';
+import { jsonLd as toJsonLd } from '@/lib/jsonLd';
 
 /**
  * Products that ship with the app, so a fresh database (or a slow one) does not
@@ -106,7 +107,7 @@ export default async function ProductRoute({
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
         />
       )}
       <ManagedServicePage

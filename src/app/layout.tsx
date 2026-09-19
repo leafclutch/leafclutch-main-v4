@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Providers from './providers'
 import { SITE_URL } from '@/lib/serverContent'
 import '../index.css'
+import { jsonLd } from '@/lib/jsonLd';
 
 const DESCRIPTION =
   'Leafclutch Technologies is an IT and software company in Bhairahawa (Siddharthanagar), Nepal — custom software development, websites, mobile apps, SaaS products, digital marketing, SEO and professional IT training.'
@@ -134,7 +135,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organisationSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(organisationSchema) }}
         />
       </head>
       {/* Browser extensions (Grammarly, password managers) add attributes to

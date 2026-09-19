@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import ServiceSlugRouter from '@/features/services/ServiceSlugRouter';
 import { getCompanyService, getProduct, SITE_URL } from '@/lib/serverContent';
+import { jsonLd as toJsonLd } from '@/lib/jsonLd';
 
 /**
  * Service pages render from AdminContext in the browser, so the slug is
@@ -88,7 +89,7 @@ export default async function ServiceRoute({
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
         />
       )}
       <ServiceSlugRouter slug={service} />
