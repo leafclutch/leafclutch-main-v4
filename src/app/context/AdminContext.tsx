@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "@/lib/supabase";
+import { pruneReplacedImages } from "@/lib/storage";
 import { normalizeMemberLinks, type MemberLink } from "@/lib/memberLinks";
 import { initialBlogPosts, type BlogPost } from "@/lib/blogSeed";
 export { initialBlogPosts, INITIAL_BLOG_SLUGS } from "@/lib/blogSeed";
@@ -2421,7 +2422,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       // A failed read leaves the demo defaults in state. Saving them would
       // overwrite the real content and prune every row that is missing.
       if (!remoteReadOk.current) return;
-      void syncSupabaseContent(payload);
+      void syncSupabaseContent(payload).then(saved => {
+        // Now that the new URLs are stored, any picture they replaced can go.
+        if (saved) void pruneReplacedImages(JSON.stringify(payload));
+      });
       return;
     }
 

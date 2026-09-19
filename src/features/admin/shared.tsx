@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { uploadImage } from '@/lib/storage';
+import { markReplaced, uploadImage } from '@/lib/storage';
 
 export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
@@ -75,7 +75,11 @@ export function ImageDropzone({ value, onChange, compact = false, folder = 'gene
     setError('');
     setBusy(true);
     try {
-      onChange(await uploadImage(file, folder));
+      const uploaded = await uploadImage(file, folder);
+      // The picture being replaced is a candidate for deletion, but only once
+      // the change has actually been saved — see pruneReplacedImages.
+      if (value && value !== uploaded) markReplaced(value);
+      onChange(uploaded);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Upload failed.');
     } finally {

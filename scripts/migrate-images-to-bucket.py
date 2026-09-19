@@ -14,6 +14,7 @@ undone.
     python3 scripts/migrate-images-to-bucket.py            # show what would happen
     python3 scripts/migrate-images-to-bucket.py --apply    # do it
     python3 scripts/migrate-images-to-bucket.py --restore backups/<file>.json
+    python3 scripts/migrate-images-to-bucket.py --prune-orphans [--apply]
 
 Close any open admin panel first. It mirrors its whole in-memory copy back to
 the database when anything changes, which will undo this from a stale tab.
@@ -154,9 +155,79 @@ def fetch(url: str, key: str, table: str) -> list[dict] | None:
     return rows if isinstance(rows, list) else None
 
 
+def list_bucket(url: str, key: str) -> list[str]:
+    """Every file in the bucket, walking the folders the uploader writes to."""
+    folders = sorted({folder for _, _, folder, _ in TARGETS} | {""})
+    names: set[str] = set()
+    for folder in folders:
+        status, body = request(
+            "POST",
+            f"{url}/storage/v1/object/list/{BUCKET}",
+            key,
+            body=json.dumps({"prefix": f"{folder}/" if folder else "", "limit": 1000}).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        if status != 200:
+            continue
+        for entry in json.loads(body):
+            # Folders come back without an id; only real files have one.
+            if entry.get("id"):
+                names.add(f"{folder}/{entry['name']}" if folder else entry["name"])
+    return sorted(names)
+
+
+def referenced_paths(url: str, key: str) -> set[str]:
+    """Bucket paths that some row still points at."""
+    marker = f"/object/public/{BUCKET}/"
+    paths: set[str] = set()
+    for table, column, _, _ in TARGETS:
+        rows = fetch(url, key, table)
+        for row in rows or []:
+            value = row.get(column)
+            if isinstance(value, str) and marker in value:
+                paths.add(urllib.parse.unquote(value.split(marker, 1)[1].split("?")[0]))
+    return paths
+
+
+def prune_orphans(url: str, key: str, apply_changes: bool) -> None:
+    """Delete bucket files no row references — replaced or abandoned uploads."""
+    objects = list_bucket(url, key)
+    keep = referenced_paths(url, key)
+    orphans = [name for name in objects if name not in keep]
+
+    print(f"{len(objects)} files in the bucket, {len(keep)} still referenced")
+    if not orphans:
+        print("No orphans.")
+        return
+    print(f"{len(orphans)} orphaned:")
+    for name in orphans:
+        print(f"   {name}")
+
+    if not apply_changes:
+        print("\nDry run. Re-run with --apply to delete them.")
+        return
+
+    status, body = request(
+        "DELETE",
+        f"{url}/storage/v1/object/{BUCKET}",
+        key,
+        body=json.dumps({"prefixes": orphans}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    print(
+        f"\nDeleted {len(orphans)} files."
+        if status == 200
+        else f"\nDelete failed ({status}): {body[:200]!r}"
+    )
+
+
 def main() -> None:
     apply_changes = "--apply" in sys.argv
     url, key = load_env()
+
+    if "--prune-orphans" in sys.argv:
+        prune_orphans(url, key, apply_changes)
+        return
 
     if "--restore" in sys.argv:
         entries = json.loads(Path(sys.argv[sys.argv.index("--restore") + 1]).read_text())

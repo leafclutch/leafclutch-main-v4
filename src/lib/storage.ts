@@ -115,3 +115,56 @@ export async function uploadImage(file: File, folder = 'general'): Promise<strin
   if (!data?.publicUrl) throw new Error('Upload succeeded but no public URL was returned.');
   return data.publicUrl;
 }
+
+/** The `/object/public/<bucket>/` marker in a Supabase public URL. */
+const PUBLIC_MARKER = `/storage/v1/object/public/${BUCKET}/`;
+
+/** Path inside the bucket for one of our public URLs, or null for anything else. */
+function bucketPath(url: string): string | null {
+  const index = url.indexOf(PUBLIC_MARKER);
+  if (index === -1) return null;
+  const path = url.slice(index + PUBLIC_MARKER.length).split(/[?#]/)[0];
+  return path ? decodeURIComponent(path) : null;
+}
+
+export function isBucketUrl(url: string): boolean {
+  return bucketPath(url) !== null;
+}
+
+/**
+ * Images that were swapped out in the editor and are probably now unused.
+ *
+ * They are not deleted at that moment: the edit may still be cancelled, in
+ * which case the record goes on pointing at the original and deleting it would
+ * break the image. They are removed once a save has gone through and the URL
+ * is confirmed to be referenced nowhere.
+ */
+const replaced = new Set<string>();
+
+export function markReplaced(url: string): void {
+  if (url && isBucketUrl(url)) replaced.add(url);
+}
+
+/**
+ * Deletes swapped-out images that the just-saved content no longer mentions.
+ *
+ * `savedContent` is the serialised state that was written, so an image still
+ * in use — because the edit was abandoned, or because the same file is used in
+ * two places — is kept and simply forgotten about.
+ */
+export async function pruneReplacedImages(savedContent: string): Promise<number> {
+  if (replaced.size === 0) return 0;
+  const candidates = [...replaced];
+  replaced.clear();
+
+  const unused = candidates.filter(url => !savedContent.includes(url));
+  if (unused.length === 0) return 0;
+
+  const paths = unused.map(bucketPath).filter((path): path is string => Boolean(path));
+  if (paths.length === 0) return 0;
+
+  const { error } = await supabase.storage.from(BUCKET).remove(paths);
+  // A failed clean-up leaves an unused file behind, which is harmless — never
+  // worth surfacing over a save that otherwise worked.
+  return error ? 0 : paths.length;
+}
