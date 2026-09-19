@@ -405,7 +405,7 @@ export default function Home() {
             <h1 className="hero2-title animate-fade-up delay-100">
               Leafclutch
               <br />
-              <span className="hero2-title-grad">Technologies (P). Ltd.</span>
+              <span className="hero2-title-grad">Technologies Pvt. Ltd.</span>
             </h1>
 
             <p className="hero2-sub animate-fade-up delay-200">
@@ -968,7 +968,7 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-4 justify-center mt-10">
             <a
-              href="mailto:info@leafclutch.com.np"
+              href="mailto:info@leafclutchtech.com.np"
               className="btn-navy px-8 py-4 rounded-xl text-sm font-semibold"
             >
               Start Your Project →
@@ -1101,7 +1101,7 @@ export default function Home() {
                   100% Free&nbsp; • &nbsp;No Obligation&nbsp; • &nbsp;Expert
                   Advice
                 </span>
-                <a href="mailto:info@leafclutch.com.np">
+                <a href="mailto:info@leafclutchtech.com.np">
                   Book a Free Consultation <b>↗</b>
                 </a>
               </div>
