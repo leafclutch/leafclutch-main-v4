@@ -17,8 +17,11 @@ export default function TestimonialSection({ service }: Props) {
   const headerRef = useReveal();
 
   const published = testimonials.filter(t => t.status !== 'draft');
+  // A product page shows only reviews of that product. "General" reviews are
+  // not about any one product, so they belong on the home page, which shows
+  // everything. With nothing to show the whole section hides itself below.
   const filtered = service
-    ? published.filter(t => t.service === service || t.service === 'General')
+    ? published.filter(t => t.service === service)
     : published;
 
   const [active, setActive] = useState(0);
