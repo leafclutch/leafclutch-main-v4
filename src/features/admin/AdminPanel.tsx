@@ -204,7 +204,6 @@ export default function AdminPanel() {
     members,
     adminPassword,
     addService,
-    syncContent,
   } = useAdmin();
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -253,7 +252,6 @@ export default function AdminPanel() {
 
       setAuthenticated(true);
       setError("");
-      await syncContent();
     } catch {
       if (ALLOW_LOCAL_PASSWORD && password === adminPassword) {
         setAuthenticated(true);

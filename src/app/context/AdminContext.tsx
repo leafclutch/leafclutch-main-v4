@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -1803,6 +1804,28 @@ const readSupabaseContent = async () => {
           )
         : {}),
     },
+    /**
+     * False when any table failed to load. Every field above falls back to the
+     * built-in demo content on error, and the save path mirrors state back to
+     * the database and prunes whatever is missing from it — so writing after a
+     * failed read replaces real content with the demo data. Callers must not
+     * save unless this is true.
+     */
+    ok: ![
+      servicesError,
+      serviceImagesError,
+      serviceFeaturesError,
+      testimonialsError,
+      websiteImagesError,
+      membersError,
+      companyServicesError,
+      statsError,
+      settingsError,
+      clientsError,
+      projectsError,
+      faqsError,
+      blogsError,
+    ].some(Boolean),
   };
 };
 
@@ -2238,12 +2261,21 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [adminPassword, setAdminPasswordState] = useState(DEFAULT_PASSWORD);
   const [hydrated, setHydrated] = useState(false);
 
+  /**
+   * Writing is only safe once we know the database was read successfully.
+   * Starts false so a failed or unfinished read can never be mirrored back.
+   */
+  const remoteReadOk = useRef(false);
+  /** The state updates made by hydration are an echo of the read, not an edit. */
+  const skipNextSave = useRef(true);
+
   useEffect(() => {
     const hydrate = async () => {
       try {
         if (isSupabaseConfigured) {
           const remote = await readSupabaseContent();
           if (remote) {
+            remoteReadOk.current = remote.ok;
             setTestimonials(remote.testimonials);
             setServices(remote.services);
             if (remote.companyServices)
@@ -2304,7 +2336,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
 
+    // The first run only mirrors back what hydration just read.
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
+
     if (isSupabaseConfigured) {
+      // A failed read leaves the demo defaults in state. Saving them would
+      // overwrite the real content and prune every row that is missing.
+      if (!remoteReadOk.current) return;
       void syncSupabaseContent({
         testimonials,
         services,
