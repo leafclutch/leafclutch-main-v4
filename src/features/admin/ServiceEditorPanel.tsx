@@ -80,7 +80,7 @@ export default function ServiceEditorPanel({ serviceId, onBack }: { serviceId: s
             {iconEditorOpen && (
               <div className="absolute left-0 top-full z-20 mt-2 w-64 rounded-xl border border-border bg-white p-3 shadow-xl">
                 <p className="text-xs font-semibold text-foreground mb-2">Product icon</p>
-                <ImageDropzone compact value={draft.iconImage ?? ''} onChange={url => setField('iconImage', url)} />
+                <ImageDropzone compact value={draft.iconImage ?? ''} onChange={url => setField('iconImage', url)} folder="products" />
                 {draft.iconImage && (
                   <button type="button" onClick={() => setField('iconImage', '')} className="mt-2 w-full text-xs font-semibold text-red-500 hover:text-red-600 transition-colors">
                     Remove uploaded icon
@@ -185,7 +185,7 @@ function ServiceImageFormModal({ initial, title, onClose, onSave }: { initial?: 
       <form onSubmit={e => { e.preventDefault(); onSave(form); }} className="space-y-4">
         <Field label="Label *"><input required value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} className="admin-input" placeholder="e.g. Product Screenshot" /></Field>
         <Field label="Image">
-          <ImageDropzone value={form.url} onChange={url => setForm(p => ({ ...p, url }))} />
+          <ImageDropzone value={form.url} onChange={url => setForm(p => ({ ...p, url }))} folder="products" />
           <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} className="admin-input mt-2" placeholder="Or paste an image URL" />
         </Field>
         <div className="flex gap-3 pt-2">
@@ -293,7 +293,7 @@ function FeatureFormModal({ initial, onClose, onSave }: { initial?: ServiceFeatu
     <Modal title={initial ? 'Edit Feature' : 'Add Feature'} onClose={onClose}>
       <form onSubmit={e => { e.preventDefault(); onSave(form); }} className="space-y-4">
         <Field label="Feature image">
-          <ImageDropzone value={form.image} onChange={image => setForm(p => ({ ...p, image }))} compact />
+          <ImageDropzone value={form.image} onChange={image => setForm(p => ({ ...p, image }))} compact folder="products" />
           <input value={form.image} onChange={e => setForm(p => ({ ...p, image: e.target.value }))} className="admin-input mt-2" placeholder="Paste an image URL or upload an image" />
         </Field>
         <Field label="Feature title *"><input required value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="admin-input" placeholder="e.g. POS & Billing" /></Field>

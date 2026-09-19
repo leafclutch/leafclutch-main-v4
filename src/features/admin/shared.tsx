@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { uploadImage } from '@/lib/storage';
 
 export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (
@@ -61,48 +62,42 @@ export function Stars({ rating }: { rating: number }) {
   return <span className="text-[#F59E0B] text-sm tracking-tight">{'★'.repeat(rating)}{'☆'.repeat(Math.max(0, 5 - rating))}</span>;
 }
 
-export async function imageFileToDataUrl(file: File) {
-  if (!file.type.startsWith('image/')) throw new Error('Please choose an image file.');
-  const source = URL.createObjectURL(file);
-  try {
-    const image = new Image();
-    image.src = source;
-    await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error('The image could not be read.')); });
-    const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-    canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.82);
-  } finally {
-    URL.revokeObjectURL(source);
-  }
-}
-
-export function ImageDropzone({ value, onChange, compact = false }: { value: string; onChange: (value: string) => void; compact?: boolean }) {
+export function ImageDropzone({ value, onChange, compact = false, folder = 'general' }: { value: string; onChange: (value: string) => void; compact?: boolean; folder?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
+  // The file goes to the Supabase media bucket and only its URL is stored, so
+  // the row stays small however large the picture is.
   const readFile = async (file?: File) => {
     if (!file) return;
-    try { setError(''); onChange(await imageFileToDataUrl(file)); } catch (reason) { setError(reason instanceof Error ? reason.message : 'Upload failed.'); }
+    setError('');
+    setBusy(true);
+    try {
+      onChange(await uploadImage(file, folder));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div>
       <button
         type="button"
+        disabled={busy}
         onClick={() => inputRef.current?.click()}
         onDragOver={event => { event.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={event => { event.preventDefault(); setDragging(false); void readFile(event.dataTransfer.files[0]); }}
         className={`w-full ${compact ? 'min-h-16' : 'min-h-24'} rounded-xl border-2 border-dashed flex items-center justify-center gap-3 p-3 text-left transition-colors ${dragging ? 'border-accent bg-secondary' : 'border-[#cbd8e8] bg-[#f8fbff] hover:border-accent'}`}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6f6ff] text-accent text-lg">↑</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6f6ff] text-accent text-lg">{busy ? '…' : '↑'}</span>
         <span>
-          <strong className="block text-xs text-foreground">Drop image here or browse</strong>
-          <small className="block text-[11px] text-muted-foreground mt-1">JPG, PNG or WebP. Resized automatically.</small>
+          <strong className="block text-xs text-foreground">{busy ? 'Uploading…' : 'Drop image here or browse'}</strong>
+          <small className="block text-[11px] text-muted-foreground mt-1">JPG, PNG or WebP. Resized and stored in your media bucket.</small>
         </span>
       </button>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={event => void readFile(event.target.files?.[0])} />

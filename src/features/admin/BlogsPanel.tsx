@@ -82,7 +82,7 @@ function BlogFormModal({ initial, onClose, onSave }: {
         </p>
 
         <Field label="Cover Image" hint="Upload one, or paste an image URL below">
-          <ImageDropzone value={coverImage} onChange={setCoverImage} />
+          <ImageDropzone value={coverImage} onChange={setCoverImage} folder="blogs" />
         </Field>
         {!coverImage && (
           <Field label="…or Image URL">

@@ -146,7 +146,7 @@ function NewServiceForm({
           />
         </Field>
         <Field label="Hero / Profile Image">
-          <ImageDropzone value={heroImage} onChange={setHeroImage} />
+          <ImageDropzone value={heroImage} onChange={setHeroImage} folder="products" />
           <input
             value={heroImage}
             onChange={(e) => setHeroImage(e.target.value)}

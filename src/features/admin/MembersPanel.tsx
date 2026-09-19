@@ -132,7 +132,7 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
         className="space-y-4"
       >
         <Field label="Photo">
-          <ImageDropzone value={photo} onChange={setPhoto} />
+          <ImageDropzone value={photo} onChange={setPhoto} folder="team" />
         </Field>
         <Field label="Full Name *">
           <input required value={name} onChange={e => setName(e.target.value)} className="admin-input" placeholder="e.g. Er. Siddhartha Pathak" />

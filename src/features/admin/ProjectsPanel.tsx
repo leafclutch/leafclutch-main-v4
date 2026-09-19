@@ -34,7 +34,7 @@ function ProjectFormModal({ initial, onClose, onSave }: {
         className="space-y-4"
       >
         <Field label="Project Image" hint="Upload a screenshot, or paste an image URL below">
-          <ImageDropzone value={image} onChange={setImage} />
+          <ImageDropzone value={image} onChange={setImage} folder="portfolio" />
         </Field>
         {!image && (
           <Field label="…or Image URL">

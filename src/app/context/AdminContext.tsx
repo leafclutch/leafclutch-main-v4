@@ -96,11 +96,6 @@ export type Testimonial = {
   rating: number;
   service: string;
   photo?: string;
-  /**
-   * Instagram post permalink shown instead of `photo`. Uploads are stored as
-   * base64 in the row, so an embed keeps the testimonials table small.
-   */
-  embedUrl?: string;
   certificateImage?: string;
   overview?: string;
   publishedAt?: string;
@@ -1552,7 +1547,6 @@ const mapSupabaseTestimonial = (row: any): Testimonial => ({
   rating: Number(row.rating ?? 5),
   service: row.service ?? "General",
   photo: row.photo ?? undefined,
-  embedUrl: row.embed_url ?? undefined,
   certificateImage: row.certificate_image ?? undefined,
   overview: row.overview ?? undefined,
   publishedAt: row.published_at ?? row.publishedAt ?? undefined,
@@ -1904,7 +1898,6 @@ const syncSupabaseContent = async ({
       rating: item.rating,
       service: item.service,
       photo: item.photo ?? null,
-      embed_url: item.embedUrl ?? null,
       certificate_image: item.certificateImage ?? null,
       overview: item.overview ?? null,
       published_at: item.publishedAt ?? new Date().toISOString(),

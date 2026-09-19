@@ -202,7 +202,7 @@ export default function CompanyServiceEditorPanel({
             </Field>
 
             <Field label="Cover Image">
-              <ImageDropzone value={coverImage} onChange={setCoverImage} />
+              <ImageDropzone value={coverImage} onChange={setCoverImage} folder="services" />
               <input
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}

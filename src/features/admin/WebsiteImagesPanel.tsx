@@ -16,7 +16,7 @@ function WebsiteImageFormModal({ initial, onClose, onSave }: { initial?: Website
           <input required value={form.usedIn} onChange={e => setForm(p => ({ ...p, usedIn: e.target.value }))} className="admin-input" placeholder="e.g. Homepage — products row" />
         </Field>
         <Field label="Image">
-          <ImageDropzone value={form.url} onChange={url => setForm(p => ({ ...p, url }))} />
+          <ImageDropzone value={form.url} onChange={url => setForm(p => ({ ...p, url }))} folder="general" />
           <input value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} className="admin-input mt-2" placeholder="Or paste an image URL" />
         </Field>
         <div className="flex gap-3 pt-2">

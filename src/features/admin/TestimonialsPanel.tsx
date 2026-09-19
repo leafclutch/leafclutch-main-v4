@@ -9,14 +9,13 @@ import {
   type Testimonial,
 } from '@/app/context/AdminContext';
 import { ConfirmDialog, Field, ImageDropzone, Modal, StarRatingInput, Stars } from './shared';
-import { normalizeInstagramUrl } from '@/lib/instagram';
 
 type TestimonialFormValues = Omit<Testimonial, 'id'>;
 
 function emptyForm(defaultService: string): TestimonialFormValues {
   return {
     name: '', role: '', company: '', content: '', rating: 5, service: defaultService,
-    photo: '', embedUrl: '', certificateImage: '', overview: '', publishedAt: new Date().toISOString().slice(0, 10), status: 'published',
+    photo: '', certificateImage: '', overview: '', publishedAt: new Date().toISOString().slice(0, 10), status: 'published',
   };
 }
 
@@ -29,22 +28,9 @@ function TestimonialFormModal({ services, initial, defaultService = 'General', o
 }) {
   const [form, setForm] = useState<TestimonialFormValues>(initial ? { ...initial } : emptyForm(defaultService));
 
-  const embedRaw = (form.embedUrl ?? '').trim();
-  const embedState: 'empty' | 'valid' | 'invalid' = !embedRaw
-    ? 'empty'
-    : normalizeInstagramUrl(embedRaw)
-      ? 'valid'
-      : 'invalid';
-
   return (
     <Modal title={initial ? 'Edit Testimonial' : 'Add Testimonial'} onClose={onClose}>
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          onSave({ ...form, embedUrl: normalizeInstagramUrl(embedRaw) ?? '' });
-        }}
-        className="space-y-4"
-      >
+      <form onSubmit={e => { e.preventDefault(); onSave(form); }} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Client name *">
             <input required value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="admin-input" placeholder="e.g. Rohan KC" />
@@ -79,45 +65,12 @@ function TestimonialFormModal({ services, initial, defaultService = 'General', o
         <Field label="Client / student overview">
           <textarea value={form.overview} onChange={e => setForm(p => ({ ...p, overview: e.target.value }))} rows={2} className="admin-input resize-none" placeholder="Optional: e.g. Completed Full Stack Development and built a POS project." />
         </Field>
-        <Field
-          label="Instagram post"
-          hint="Paste the post link and it is shown in place of an uploaded image. Nothing is stored but the link, and the post must be public."
-        >
-          <input
-            value={form.embedUrl ?? ''}
-            onChange={e => setForm(p => ({ ...p, embedUrl: e.target.value }))}
-            onBlur={e => {
-              // Tidy the link once, on the way out, so typing is never fought.
-              const tidy = normalizeInstagramUrl(e.target.value);
-              if (tidy) setForm(p => ({ ...p, embedUrl: tidy }));
-            }}
-            className="admin-input"
-            placeholder="https://www.instagram.com/p/XXXXXXXXXXX/"
-          />
-          {embedState === 'invalid' && (
-            <p className="mt-1 text-xs text-red-500">
-              That does not look like an Instagram post link. It should contain /p/ or /reel/.
-            </p>
-          )}
-          {embedState === 'valid' && (
-            <p className="mt-1 text-xs text-green-600">
-              Looks good — this post replaces the image below.
-            </p>
-          )}
-        </Field>
-        <Field
-          label="Client / profile image"
-          hint={
-            embedState === 'valid'
-              ? 'Not used while an Instagram post is set, but kept as a fallback.'
-              : 'Uploads are stored in the database. An image URL or an Instagram post keeps it small.'
-          }
-        >
-          <ImageDropzone value={form.photo ?? ''} onChange={photo => setForm(p => ({ ...p, photo }))} compact />
+        <Field label="Client / profile image" hint="Uploaded to your media bucket; only the link is saved.">
+          <ImageDropzone value={form.photo ?? ''} onChange={photo => setForm(p => ({ ...p, photo }))} compact folder="testimonials" />
           <input value={form.photo ?? ''} onChange={e => setForm(p => ({ ...p, photo: e.target.value }))} className="admin-input mt-2" placeholder="Or paste an image URL" />
         </Field>
         <Field label="Certificate / delivered system image">
-          <ImageDropzone value={form.certificateImage ?? ''} onChange={certificateImage => setForm(p => ({ ...p, certificateImage }))} compact />
+          <ImageDropzone value={form.certificateImage ?? ''} onChange={certificateImage => setForm(p => ({ ...p, certificateImage }))} compact folder="certificates" />
           <input value={form.certificateImage ?? ''} onChange={e => setForm(p => ({ ...p, certificateImage: e.target.value }))} className="admin-input mt-2" placeholder="Optional" />
         </Field>
         <div className="flex gap-3 pt-2">
@@ -258,7 +211,7 @@ function ClientFormModal({ initial, onClose, onSave }: {
         className="space-y-4"
       >
         <Field label="Logo" hint="Optional — the name is shown when there is no logo">
-          <ImageDropzone value={logo} onChange={setLogo} />
+          <ImageDropzone value={logo} onChange={setLogo} folder="clients" />
         </Field>
         <Field label="Company Name *">
           <input required value={name} onChange={e => setName(e.target.value)} className="admin-input" placeholder="e.g. Himalayan Bistro" />
