@@ -604,6 +604,7 @@ body {
 /* ── Loading screen ── */
 .loading-screen {
   position: fixed; inset: 0;
+  padding: 0 16px;
   background: #FFFFFF;
   display: flex; align-items: center; justify-content: center; flex-direction: column;
   z-index: 9999;
@@ -612,7 +613,11 @@ body {
 .loading-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 .loading-screen-mark {
   color: #0F1729;
-  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  /* Each letter is its own span so the line cannot wrap without breaking a
+     word. The floor is therefore set low enough that the full name fits on
+     the narrowest phone; above ~560px the viewport unit takes over and the
+     size is unchanged. */
+  font-size: clamp(1.25rem, 5vw, 2.8rem);
   font-weight: 800;
   letter-spacing: 0.06em;
   text-align: center;
@@ -2495,3 +2500,47 @@ body {
   transition: background .2s ease, color .2s ease;
 }
 .blog-share:hover { background: var(--primary); color: #fff; }
+
+/* --- Loading screen mark ---------------------------------------------------
+   The logo settles first, then the letters arrive underneath it. */
+.loading-screen-logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-bottom: 22px;
+}
+.loading-screen-logo img {
+  position: relative;
+  z-index: 1;
+  width: clamp(92px, 18vw, 140px);
+  height: auto;
+  animation:
+    loaderMarkIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both,
+    loaderMarkBreathe 2.8s ease-in-out 0.62s infinite;
+}
+/* A soft ring that expands out from behind the badge, like a signal. */
+.loading-screen-halo {
+  position: absolute;
+  width: clamp(92px, 18vw, 140px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 247, 9, 0.22), rgba(0, 25, 92, 0.10) 55%, transparent 72%);
+  animation: loaderHalo 2.8s ease-out 0.5s infinite;
+}
+@keyframes loaderMarkIn {
+  from { opacity: 0; transform: scale(0.72) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes loaderMarkBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.045); }
+}
+@keyframes loaderHalo {
+  0%   { opacity: 0; transform: scale(0.85); }
+  45%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen-logo img { animation: none; }
+  .loading-screen-halo { animation: none; opacity: 0.5; }
+}

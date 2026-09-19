@@ -7,12 +7,14 @@ interface Props {
 const BRAND_TEXT = 'LEAFCLUTCH TECHNOLOGIES';
 const LETTER_DELAY = 0.02;
 const HOLD_MS = 60;
+/** Time the mark takes to settle before the letters start arriving. */
+const MARK_MS = 420;
 
 export default function LoadingScreen({ onComplete }: Props) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const revealMs = (BRAND_TEXT.length * LETTER_DELAY) * 1000 + 320;
+    const revealMs = MARK_MS + (BRAND_TEXT.length * LETTER_DELAY) * 1000 + 320;
     const hideTimer = setTimeout(() => setHidden(true), revealMs + HOLD_MS);
     const completeTimer = setTimeout(onComplete, revealMs + HOLD_MS + 180);
     return () => {
@@ -23,9 +25,13 @@ export default function LoadingScreen({ onComplete }: Props) {
 
   return (
     <div className={`loading-screen${hidden ? ' hidden' : ''}`}>
+      <div className="loading-screen-logo" aria-hidden="true">
+        <span className="loading-screen-halo" />
+        <img src="/loader-logo.webp" alt="" width={320} height={316} />
+      </div>
       <h1 className="loading-screen-mark" aria-label={BRAND_TEXT}>
         {BRAND_TEXT.split('').map((char, i) => (
-          <span key={i} className="letter" style={{ animationDelay: `${i * LETTER_DELAY}s` }}>
+          <span key={i} className="letter" style={{ animationDelay: `${MARK_MS / 1000 + i * LETTER_DELAY}s` }}>
             {char === ' ' ? ' ' : char}
           </span>
         ))}
