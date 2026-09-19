@@ -232,10 +232,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 bg-white border-b transition-all duration-300 md:left-18 ${
-        scrolled && !menuOpen
-          ? "-translate-y-full border-transparent"
-          : "shadow-md border-[#EBF0FA]"
+      className={`fixed top-0 left-0 right-0 z-50 bg-white border-b transition-shadow duration-300 md:left-18 ${
+        // Flat against the hero at the top of the page; lifts off the content
+        // once anything has scrolled underneath it.
+        scrolled ? "shadow-md border-[#EBF0FA]" : "border-transparent"
       }`}
     >
       <Link
