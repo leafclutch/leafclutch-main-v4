@@ -9,4 +9,4 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://leafclutch.com.np';
 
 /** Contact email — a different domain to the website, deliberately. */
-export const CONTACT_EMAIL = 'info@leafclutchtech.com.np';
+export const CONTACT_EMAIL = 'info@leafclutch.com.np';

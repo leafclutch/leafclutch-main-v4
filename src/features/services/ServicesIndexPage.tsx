@@ -82,7 +82,7 @@ export default function ServicesIndexPage() {
             no obligation.
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <a href="mailto:info@leafclutchtech.com.np" className="btn-primary text-white px-7 py-3.5 rounded-xl text-sm font-semibold">
+            <a href="mailto:info@leafclutch.com.np" className="btn-primary text-white px-7 py-3.5 rounded-xl text-sm font-semibold">
               Talk to Our Team
             </a>
             <Link href="/products" className="px-7 py-3.5 rounded-xl text-sm font-semibold border border-border bg-white text-[#072069] hover:border-accent transition-colors">

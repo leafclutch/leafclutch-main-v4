@@ -37,7 +37,7 @@ type PlatformMeta = {
 
 export const MEMBER_LINK_PLATFORMS: PlatformMeta[] = [
   { key: 'linkedin',  label: 'LinkedIn',  placeholder: 'https://www.linkedin.com/in/username' },
-  { key: 'email',     label: 'Email',     placeholder: 'name@leafclutchtech.com.np' },
+  { key: 'email',     label: 'Email',     placeholder: 'name@leafclutch.com.np' },
   { key: 'website',   label: 'Website',   placeholder: 'https://example.com' },
   { key: 'facebook',  label: 'Facebook',  placeholder: 'https://facebook.com/username' },
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/username' },

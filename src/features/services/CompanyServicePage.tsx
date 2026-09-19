@@ -48,7 +48,7 @@ export default function CompanyServicePage({ serviceId }: { serviceId: string })
             {service.shortDescription}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="mailto:info@leafclutchtech.com.np" className="btn-primary text-white px-7 py-3.5 rounded-xl text-sm font-semibold">
+            <a href="mailto:info@leafclutch.com.np" className="btn-primary text-white px-7 py-3.5 rounded-xl text-sm font-semibold">
               Request a Quote
             </a>
             <a href="https://wa.me/9779766715768" target="_blank" rel="noreferrer" className="px-7 py-3.5 rounded-xl text-sm font-semibold border border-border bg-white text-[#072069] hover:border-accent transition-colors">
@@ -165,7 +165,7 @@ export default function CompanyServicePage({ serviceId }: { serviceId: string })
             Talk to our team and get a free consultation — no commitment required.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a href="mailto:info@leafclutchtech.com.np" className="rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#072069] transition-colors hover:bg-white/90">
+            <a href="mailto:info@leafclutch.com.np" className="rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[#072069] transition-colors hover:bg-white/90">
               Get a Free Consultation
             </a>
             <Link href="/services" className="rounded-xl border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10">

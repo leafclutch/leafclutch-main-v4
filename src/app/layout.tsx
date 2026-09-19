@@ -78,7 +78,7 @@ const organisationSchema = {
       logo: `${SITE_URL}/footer.png`,
       image: `${SITE_URL}/footer.png`,
       description: DESCRIPTION,
-      email: 'info@leafclutchtech.com.np',
+      email: 'info@leafclutch.com.np',
       telephone: '+977-9766715768',
       foundingDate: '2024',
       address: {

@@ -177,7 +177,7 @@ export default function PricingSection({ plans }: { plans: Plan[] }) {
                 </ul>
 
                 <a
-                  href="mailto:info@leafclutchtech.com.np"
+                  href="mailto:info@leafclutch.com.np"
                   className={`block text-center py-3.5 rounded-full font-semibold text-sm transition-all ${
                     plan.featured ? 'bg-white text-[#072069] hover:bg-white/90' : 'bg-[#072069] text-white hover:bg-[#0F1729]'
                   }`}

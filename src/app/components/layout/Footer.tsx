@@ -17,8 +17,8 @@ const companyLinks = [
 
 const resourceLinks = [
   { label: "Blog & Insights", to: "#" },
-  { label: "Privacy Policy", to: "#" },
-  { label: "Terms of Service", to: "#" },
+  { label: "Privacy Policy", to: "/privacy" },
+  { label: "Terms of Service", to: "/terms" },
 ];
 
 export default function Footer() {
@@ -148,10 +148,10 @@ export default function Footer() {
                   />
                 </svg>
                 <a
-                  href="mailto:info@leafclutchtech.com.np"
+                  href="mailto:info@leafclutch.com.np"
                   className="text-[#AEC0DE] text-sm hover:text-white transition-colors"
                 >
-                  info@leafclutchtech.com.np
+                  info@leafclutch.com.np
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -276,19 +276,28 @@ export default function Footer() {
             © {new Date().getFullYear()} Leafclutch Technologies. All rights
             reserved.
           </p>
-          <div className="flex items-center gap-5">
-            <a
-              href="#"
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+            <Link
+              href="/privacy"
               className="text-[#AEC0DE] text-sm hover:text-white transition-colors"
             >
               Privacy Policy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/terms"
               className="text-[#AEC0DE] text-sm hover:text-white transition-colors"
             >
               Terms of Service
-            </a>
+            </Link>
+            {/* Sign-in for the team. Not hidden, because it is protected by
+                Supabase Auth rather than by being hard to find. */}
+            <Link
+              href="/admin"
+              rel="nofollow"
+              className="rounded-lg border border-[#33477A] px-3 py-1.5 text-sm text-[#AEC0DE] transition-colors hover:border-[#3BE3A0] hover:text-white"
+            >
+              Admin
+            </Link>
           </div>
         </div>
       </div>

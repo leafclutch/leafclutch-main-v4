@@ -225,7 +225,7 @@ export default function ManagedServicePage({
               </a>
             )}
             <a
-              href="mailto:info@leafclutchtech.com.np"
+              href="mailto:info@leafclutch.com.np"
               className="svc-secondary"
             >
               Book a Demo
@@ -427,7 +427,7 @@ export default function ManagedServicePage({
           <h2>Ready to get started?</h2>
           <p>Build a better way to work with Leafclutch.</p>
           <div className="svc-cta-actions">
-            <a href="mailto:info@leafclutchtech.com.np">
+            <a href="mailto:info@leafclutch.com.np">
               Schedule Free Demo <b>→</b>
             </a>
             <button type="button" onClick={() => setShowPricing(true)}>

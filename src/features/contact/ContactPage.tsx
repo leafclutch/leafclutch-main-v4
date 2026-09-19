@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useAdmin } from '@/app/context/AdminContext';
 import { useRevealAll } from '@/app/hooks/useReveal';
 
-const EMAIL = 'info@leafclutchtech.com.np';
+const EMAIL = 'info@leafclutch.com.np';
 const PHONE_DISPLAY = '+977 9766715768';
 const PHONE_TEL = '+9779766715768';
 const WHATSAPP = '9779766715768';

@@ -152,9 +152,9 @@ its nameservers pointed at Cloudflare at the registrar.
 
 ## Notes
 
-**The contact email stays on a different domain.** `info@leafclutchtech.com.np`
-is unchanged — only the website moved to `leafclutch.com.np`. Change
-`CONTACT_EMAIL` in `src/lib/site.ts` if that is not what you want.
+**The contact email matches the site.** `info@leafclutch.com.np` is set in
+`CONTACT_EMAIL` in `src/lib/site.ts`, and mirrored in the `email` and
+`support_email` rows of `site_settings`.
 
 **Leafclutch Academy** in the Others menu still points at
 `leafclutchtech.com.np`, which is correct — it is a separate site.
