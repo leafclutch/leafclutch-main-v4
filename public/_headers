@@ -1,0 +1,25 @@
+# Cache rules for the static assets Cloudflare serves alongside the Worker.
+# Without these every file is sent as `max-age=0, must-revalidate`, so a repeat
+# visit re-checks each one before the page can render — slow on a weak
+# connection, and wasted requests.
+
+# Build output is content-hashed: a change to the bytes changes the filename,
+# so these can never go stale.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service illustrations, logos and photographs. A month in the browser, then a
+# cheap revalidation. Matched by extension so nothing matches two rules and
+# receives the header twice.
+/*.webp
+  Cache-Control: public, max-age=2592000
+/*.png
+  Cache-Control: public, max-age=2592000
+/*.svg
+  Cache-Control: public, max-age=2592000
+/*.jpg
+  Cache-Control: public, max-age=2592000
+/*.jpeg
+  Cache-Control: public, max-age=2592000
+/*.ico
+  Cache-Control: public, max-age=2592000

@@ -558,7 +558,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div ref={achievementImageRef} className="achievement-image-wrap">
               <img
-                src="/client.png"
+                src="/client.webp"
                 alt="100+ happy Leafclutch clients"
                 className="w-full h-auto rounded-3xl shadow-lg"
               />
@@ -766,7 +766,7 @@ export default function Home() {
                 <div className="why-badge-glow" />
                 <div className="why-badge-wrap">
                   <img
-                    src="/2expyear.png"
+                    src="/2expyear.webp"
                     alt="Leafclutch Technologies — 5 Years of Excellence"
                     className="why-badge-img"
                   />
@@ -807,7 +807,7 @@ export default function Home() {
           <div className="nepal-banner reveal">
             <div className="nepal-map">
               <img
-                src="/map.png"
+                src="/map.webp"
                 alt="Map of Nepal's seven provinces"
                 className="nepal-map-img"
               />

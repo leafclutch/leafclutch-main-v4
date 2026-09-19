@@ -1479,6 +1479,19 @@ export const initialCompanyServices: CompanyService[] = [
 
 const DEFAULT_PASSWORD = "leafclutch2024";
 const CONTENT_KEY = "leafclutch-admin-content";
+/**
+ * Snapshot of the last content read, so a repeat visit can paint immediately
+ * instead of waiting on thirteen round trips. Versioned because the shape is
+ * tied to the mappers in this build.
+ */
+const CONTENT_CACHE_KEY = "leafclutch-content-cache-v1";
+/**
+ * How long a cached snapshot is served without re-querying. Every page load
+ * otherwise costs thirteen queries, which is what made a single visit look
+ * like dozens of requests. The admin panel always refetches, so edits are
+ * never hidden behind this.
+ */
+const CONTENT_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
 const PASSWORD_KEY = "leafclutch-admin-password";
 const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -2272,7 +2285,41 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const hydrate = async () => {
       try {
+        // Paint from the previous visit's snapshot first. This is display
+        // only: `remoteReadOk` stays false, so a cached copy can never be
+        // written back to the database.
+        let cacheIsFresh = false;
         if (isSupabaseConfigured) {
+          try {
+            const cached = window.localStorage.getItem(CONTENT_CACHE_KEY);
+            if (cached) {
+              const content = JSON.parse(cached) as Record<string, any>;
+              const age = Date.now() - Number(content.savedAt ?? 0);
+              cacheIsFresh =
+                age >= 0 &&
+                age < CONTENT_CACHE_MAX_AGE_MS &&
+                !window.location.pathname.startsWith("/admin");
+              if (content.testimonials) setTestimonials(content.testimonials);
+              if (content.services) setServices(content.services);
+              if (content.companyServices)
+                setCompanyServices(content.companyServices);
+              if (content.websiteImages) setWebsiteImages(content.websiteImages);
+              if (content.members) setMembers(content.members);
+              if (content.stats) setStats(content.stats);
+              if (content.settings) setSettings(content.settings);
+              if (content.clients) setClients(content.clients);
+              if (content.projects) setProjects(content.projects);
+              if (content.faqs) setFaqs(content.faqs);
+              if (content.blogPosts) setBlogPosts(content.blogPosts);
+            }
+          } catch {
+            window.localStorage.removeItem(CONTENT_CACHE_KEY);
+          }
+        }
+
+        // A snapshot this recent is good enough for a visitor; skipping the
+        // read here is what removes the repeat-visit query burst.
+        if (isSupabaseConfigured && !cacheIsFresh) {
           const remote = await readSupabaseContent();
           if (remote) {
             remoteReadOk.current = remote.ok;
@@ -2336,6 +2383,34 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!hydrated) return;
 
+    const payload = {
+      testimonials,
+      services,
+      companyServices,
+      websiteImages,
+      members,
+      stats,
+      settings,
+      clients,
+      projects,
+      faqs,
+      blogPosts,
+    };
+
+    // Refresh the snapshot on every change, including the hydration echo, so
+    // the next visit has the newest content to paint from. Quota failures are
+    // not worth breaking a page render over.
+    if (isSupabaseConfigured) {
+      try {
+        window.localStorage.setItem(
+          CONTENT_CACHE_KEY,
+          JSON.stringify({ ...payload, savedAt: Date.now() }),
+        );
+      } catch {
+        /* storage full or blocked — the page still works, just not offline */
+      }
+    }
+
     // The first run only mirrors back what hydration just read.
     if (skipNextSave.current) {
       skipNextSave.current = false;
@@ -2346,19 +2421,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       // A failed read leaves the demo defaults in state. Saving them would
       // overwrite the real content and prune every row that is missing.
       if (!remoteReadOk.current) return;
-      void syncSupabaseContent({
-        testimonials,
-        services,
-        companyServices,
-        websiteImages,
-        members,
-        stats,
-        settings,
-        clients,
-        projects,
-        faqs,
-        blogPosts,
-      });
+      void syncSupabaseContent(payload);
       return;
     }
 
