@@ -25,3 +25,6 @@ logs/
 .open-next/
 .wrangler/
 cloudflare-env.d.ts
+
+# Migration safety copies — contain image data, not source
+/backups/
