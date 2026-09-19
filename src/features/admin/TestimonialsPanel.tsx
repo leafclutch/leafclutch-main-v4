@@ -120,11 +120,11 @@ export function TestimonialsBoard({ testimonials, services, scopeService }: { te
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b border-border bg-[#F8FAFC]">
                   <th className="px-4 py-3 font-semibold">Client</th>
-                  <th className="px-4 py-3 font-semibold">Designation</th>
-                  <th className="px-4 py-3 font-semibold">Company</th>
-                  {!scopeService && <th className="px-4 py-3 font-semibold">Product</th>}
-                  <th className="px-4 py-3 font-semibold">Rating</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold hidden lg:table-cell">Designation</th>
+                  <th className="px-4 py-3 font-semibold hidden md:table-cell">Company</th>
+                  {!scopeService && <th className="px-4 py-3 font-semibold hidden lg:table-cell">Product</th>}
+                  <th className="px-4 py-3 font-semibold hidden sm:table-cell">Rating</th>
+                  <th className="px-4 py-3 font-semibold hidden md:table-cell">Status</th>
                   <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
@@ -137,11 +137,11 @@ export function TestimonialsBoard({ testimonials, services, scopeService }: { te
                         <span className="font-semibold text-foreground whitespace-nowrap">{t.name}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{t.role}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{t.company}</td>
-                    {!scopeService && <td className="px-4 py-3"><span className="text-xs bg-secondary px-2 py-0.5 rounded-full text-muted-foreground whitespace-nowrap">{t.service}</span></td>}
-                    <td className="px-4 py-3"><Stars rating={t.rating} /></td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden lg:table-cell">{t.role}</td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap hidden md:table-cell">{t.company}</td>
+                    {!scopeService && <td className="px-4 py-3 hidden lg:table-cell"><span className="text-xs bg-secondary px-2 py-0.5 rounded-full text-muted-foreground whitespace-nowrap">{t.service}</span></td>}
+                    <td className="px-4 py-3 hidden sm:table-cell"><Stars rating={t.rating} /></td>
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <button
                         type="button"
                         onClick={() => updateTestimonial(t.id, { status: t.status === 'published' ? 'draft' : 'published' })}

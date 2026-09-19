@@ -330,9 +330,9 @@ function FeaturesTab({ service }: { service: AdminService }) {
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b border-border">
                 <th className="py-2.5 pr-3 font-semibold w-10">#</th>
-                <th className="py-2.5 pr-3 font-semibold w-12">Icon</th>
+                <th className="py-2.5 pr-3 font-semibold w-12 hidden sm:table-cell">Icon</th>
                 <th className="py-2.5 pr-3 font-semibold">Feature Title</th>
-                <th className="py-2.5 pr-3 font-semibold">Short Description</th>
+                <th className="py-2.5 pr-3 font-semibold hidden md:table-cell">Short Description</th>
                 <th className="py-2.5 pr-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
@@ -345,9 +345,9 @@ function FeaturesTab({ service }: { service: AdminService }) {
                       <button type="button" disabled={index === service.features.length - 1} onClick={() => reorderFeature(service.id, feature.id, 'down')} className="disabled:opacity-25 hover:text-accent leading-none">▼</button>
                     </div>
                   </td>
-                  <td className="py-3 pr-3">{feature.image ? <img src={feature.image} alt="" className="h-10 w-14 rounded-lg object-cover" /> : <span className="text-xl">{feature.icon}</span>}</td>
-                  <td className="py-3 pr-3 font-semibold text-foreground whitespace-nowrap">{feature.title}</td>
-                  <td className="py-3 pr-3 text-muted-foreground max-w-md">{feature.description}</td>
+                  <td className="py-3 pr-3 hidden sm:table-cell">{feature.image ? <img src={feature.image} alt="" className="h-10 w-14 rounded-lg object-cover" /> : <span className="text-xl">{feature.icon}</span>}</td>
+                  <td className="py-3 pr-3 font-semibold text-foreground sm:whitespace-nowrap">{feature.title}</td>
+                  <td className="py-3 pr-3 text-muted-foreground max-w-md hidden md:table-cell">{feature.description}</td>
                   <td className="py-3 pr-3 text-right whitespace-nowrap">
                     <button type="button" onClick={() => setModal({ mode: 'edit', feature })} className="text-accent hover:text-[#072069] text-xs font-semibold mr-3">Edit</button>
                     <button type="button" onClick={() => setDeleteTarget(feature)} className="text-red-400 hover:text-red-600 text-xs font-semibold">Delete</button>

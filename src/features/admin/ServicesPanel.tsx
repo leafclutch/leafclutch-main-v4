@@ -23,18 +23,18 @@ export default function ServicesPanel({ onEdit, onAddNew }: { onEdit: (id: strin
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b border-border bg-[#F8FAFC]">
-                <th className="px-4 py-3 font-semibold w-20">Order</th>
-                <th className="px-4 py-3 font-semibold">Product</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Last Updated</th>
-                <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                <th className="px-3 sm:px-4 py-3 font-semibold w-14 sm:w-20">Order</th>
+                <th className="px-3 sm:px-4 py-3 font-semibold">Product</th>
+                <th className="px-3 sm:px-4 py-3 font-semibold hidden md:table-cell">Status</th>
+                <th className="px-3 sm:px-4 py-3 font-semibold hidden lg:table-cell">Last Updated</th>
+                <th className="px-3 sm:px-4 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {ordered.map((service, index) => (
                 <tr key={service.id} className="border-b border-[#F3F4F7] last:border-0 hover:bg-[#F8FAFC] transition-colors">
                   {/* Pick the position directly — 1 shows first everywhere. */}
-                  <td className="px-4 py-3">
+                  <td className="px-3 sm:px-4 py-3">
                     <select
                       value={index + 1}
                       onChange={e => setServicePosition(service.id, Number(e.target.value))}
@@ -46,24 +46,26 @@ export default function ServicesPanel({ onEdit, onAddNew }: { onEdit: (id: strin
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 sm:px-4 py-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {service.heroImage ? (
-                        <img src={service.heroImage} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0 bg-secondary" onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
+                        <img src={service.heroImage} alt="" className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover shrink-0 bg-secondary" onError={e => { e.currentTarget.style.visibility = 'hidden'; }} />
                       ) : service.iconImage ? (
-                        <img src={service.iconImage} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0 bg-secondary" />
+                        <img src={service.iconImage} alt="" className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover shrink-0 bg-secondary" />
                       ) : (
-                        <div className="w-11 h-11 rounded-lg shrink-0 bg-secondary flex items-center justify-center text-lg">{service.icon}</div>
+                        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg shrink-0 bg-secondary flex items-center justify-center text-lg">{service.icon}</div>
                       )}
-                      <div className="min-w-0">
+                      {/* Table layout sizes columns to content, so the cap has to
+                          live here or a long title pushes Actions off screen. */}
+                      <div className="min-w-0 max-w-32 sm:max-w-56 md:max-w-72 lg:max-w-96">
                         <p className="font-semibold text-foreground truncate">{service.title}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-72">{service.description}</p>
+                        <p className="text-xs text-muted-foreground truncate">{service.description}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3"><StatusPill active={service.status === 'active'} /></td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{relativeTime(service.updatedAt)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-3 sm:px-4 py-3 hidden md:table-cell"><StatusPill active={service.status === 'active'} /></td>
+                  <td className="px-3 sm:px-4 py-3 text-muted-foreground whitespace-nowrap hidden lg:table-cell">{relativeTime(service.updatedAt)}</td>
+                  <td className="px-3 sm:px-4 py-3 text-right">
                     <button type="button" onClick={() => onEdit(service.id)} className="text-accent hover:text-[#072069] text-xs font-semibold border border-accent/30 hover:border-accent rounded-lg px-3 py-1.5 transition-colors">Edit</button>
                   </td>
                 </tr>

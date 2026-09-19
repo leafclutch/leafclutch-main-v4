@@ -221,7 +221,7 @@ export default function CompanyServicesPanel({
                 <th className="px-4 py-3 font-semibold hidden md:table-cell">
                   Technologies
                 </th>
-                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold hidden sm:table-cell">Status</th>
                 <th className="px-4 py-3 font-semibold hidden sm:table-cell">
                   Last Updated
                 </th>
@@ -309,7 +309,7 @@ export default function CompanyServicesPanel({
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 hidden sm:table-cell">
                     <StatusPill
                       active={service.status === "active"}
                       activeLabel="Active"

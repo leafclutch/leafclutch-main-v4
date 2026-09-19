@@ -218,6 +218,8 @@ export default function AdminPanel() {
   >(null);
   const [newServiceOpen, setNewServiceOpen] = useState(false);
   const [search, setSearch] = useState("");
+  /** Sidebar is a drawer below `lg`, always on screen from `lg` up. */
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -394,13 +396,28 @@ export default function AdminPanel() {
 
   const goTab = (next: Tab) => {
     setTab(next);
+    setNavOpen(false);
     if (next !== "service-editor") setEditingServiceId(null);
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 min-h-screen bg-[#0F1729] text-white flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] lg:flex">
+      {/* Dims the page behind the drawer, and closes it when tapped. */}
+      {navOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+        />
+      )}
+
+      {/* Sidebar — off-canvas drawer on small screens, in the flow from lg up */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto bg-[#0F1729] text-white transition-transform duration-300 ease-out lg:static lg:z-auto lg:min-h-screen lg:w-64 lg:shrink-0 lg:translate-x-0 ${
+          navOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="p-5 border-b border-white/10 flex items-center gap-3">
           <Image
             src={logoImg}
@@ -409,10 +426,18 @@ export default function AdminPanel() {
             height={36}
             className="h-9 w-9 rounded-lg object-contain bg-white/5 p-1"
           />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-bold text-sm truncate">Leafclutch Technologies</p>
             <p className="text-gray-400 text-[11px]">Admin Panel</p>
           </div>
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setNavOpen(false)}
+            className="-mr-1 shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/10 hover:text-white lg:hidden"
+          >
+            ✕
+          </button>
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
@@ -478,8 +503,16 @@ export default function AdminPanel() {
 
       {/* Main column */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="bg-white border-b border-border px-6 py-3.5 flex items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-sm">
+        <header className="bg-white border-b border-border px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-4">
+          <button
+            type="button"
+            aria-label="Open menu"
+            onClick={() => setNavOpen(true)}
+            className="-ml-1 shrink-0 rounded-lg p-2 text-xl leading-none text-muted-foreground hover:bg-secondary lg:hidden"
+          >
+            ☰
+          </button>
+          <div className="relative min-w-0 flex-1 max-w-sm">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -509,14 +542,19 @@ export default function AdminPanel() {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <Link
               href="/"
               className="text-muted-foreground hover:text-accent text-sm transition-colors"
+              title="Back to Site"
             >
-              ← Back to Site
+              <span aria-hidden="true" className="sm:hidden">
+                ←
+              </span>
+              <span className="hidden sm:inline">← Back to Site</span>
+              <span className="sr-only sm:hidden">Back to Site</span>
             </Link>
-            <div className="w-9 h-9 rounded-full bg-linear-to-br from-cyan-400 to-[#072069] flex items-center justify-center text-white text-sm font-bold">
+            <div className="hidden sm:flex w-9 h-9 rounded-full bg-linear-to-br from-cyan-400 to-[#072069] items-center justify-center text-white text-sm font-bold">
               A
             </div>
             <button
@@ -531,7 +569,7 @@ export default function AdminPanel() {
           </div>
         </header>
 
-        <main className="flex-1 p-6 max-w-350 w-full">
+        <main className="flex-1 min-w-0 w-full max-w-350 p-4 sm:p-6">
           {tab === "dashboard" && (
             <DashboardPanel
               onNavigate={(next) =>

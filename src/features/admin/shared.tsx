@@ -130,7 +130,7 @@ export function ConfirmDialog({ title, description, confirmLabel = 'Delete', onC
 export function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 p-4 overflow-y-auto">
-      <div className={`bg-white rounded-2xl p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} shadow-2xl my-8 shrink-0`}>
+      <div className={`bg-white rounded-2xl p-4 sm:p-6 w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} shadow-2xl my-4 sm:my-8 shrink-0`}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-foreground text-lg">{title}</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">✕</button>
