@@ -32,3 +32,8 @@ cloudflare-env.d.ts
 
 # Migration safety copies — contain image data, not source
 /backups/
+
+# Personnel exports — these carry dates of birth, phone numbers and personal
+# email addresses, which do not belong in version control.
+/members_rows.csv
+/*_rows.csv
