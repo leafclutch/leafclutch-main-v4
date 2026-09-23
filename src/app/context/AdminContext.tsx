@@ -182,6 +182,10 @@ export type Member = {
   joinedOn?: string;
   endedOn?: string;
   credentialStatus?: CredentialStatus;
+  /** Set when someone moved to a different type, e.g. intern to team. */
+  promotedOn?: string;
+  previousRole?: string;
+  previousType?: MemberType;
 };
 
 export type CredentialStatus = "active" | "completed" | "revoked";
@@ -1678,6 +1682,9 @@ const mapSupabaseMember = (row: any): Member => ({
   joinedOn: row.joined_on ?? undefined,
   endedOn: row.ended_on ?? undefined,
   credentialStatus: row.credential_status ?? "active",
+  promotedOn: row.promoted_on ?? undefined,
+  previousRole: row.previous_role ?? undefined,
+  previousType: row.previous_type ?? undefined,
 });
 
 const mapSupabaseCompanyService = (row: any): CompanyService => ({
@@ -1956,6 +1963,9 @@ const syncSupabaseContent = async ({
         joined_on: member.joinedOn || null,
         ended_on: member.endedOn || null,
         credential_status: member.credentialStatus ?? "active",
+        promoted_on: member.promotedOn || null,
+        previous_role: member.previousRole || null,
+        previous_type: member.previousType || null,
       };
     });
 

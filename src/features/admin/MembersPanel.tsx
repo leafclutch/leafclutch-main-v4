@@ -25,6 +25,80 @@ const GROUPS: { type: MemberType; title: string; hint: string }[] = [
   },
 ];
 
+/**
+ * Moves someone to a different group while keeping their history.
+ *
+ * The credential ID is deliberately left alone: it is printed on certificates
+ * and typed into the verification portal, so reissuing it would invalidate
+ * every copy already handed out.
+ */
+function PromoteDialog({ member, onClose, onPromote }: {
+  member: Member;
+  onClose: () => void;
+  onPromote: (changes: Partial<Member>) => void;
+}) {
+  const [type, setType] = useState<MemberType>(member.type === 'intern' ? 'team' : 'team');
+  const [role, setRole] = useState(member.role);
+  const [on, setOn] = useState(new Date().toISOString().slice(0, 10));
+
+  return (
+    <Modal title={`Promote ${member.name}`} onClose={onClose}>
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          onPromote({
+            type,
+            role,
+            promotedOn: on,
+            previousType: member.type,
+            previousRole: member.role,
+          });
+        }}
+        className="space-y-4"
+      >
+        <div className="rounded-xl border border-border bg-[#F8FAFC] p-3 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {GROUP_LABEL[member.type]} · {member.role}
+          </span>
+          <span className="mx-2">→</span>
+          <span className="font-semibold text-accent">{GROUP_LABEL[type]} · {role || '…'}</span>
+          <p className="mt-2">
+            Keeps credential{' '}
+            <code className="font-mono text-foreground">{member.credentialId}</code>, so
+            anything already issued with it still verifies.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Promote to">
+            <select value={type} onChange={e => setType(e.target.value as MemberType)} className="admin-input">
+              <option value="team">Team Member</option>
+              <option value="founder">Founder</option>
+              <option value="intern">Intern</option>
+            </select>
+          </Field>
+          <Field label="Effective from">
+            <input type="date" value={on} onChange={e => setOn(e.target.value)} className="admin-input" required />
+          </Field>
+        </div>
+        <Field label="New role / designation *">
+          <input required value={role} onChange={e => setRole(e.target.value)} className="admin-input" placeholder="e.g. Graphic Designer" />
+        </Field>
+        <div className="flex gap-3 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary">Cancel</button>
+          <button type="submit" className="btn-primary flex-1 rounded-lg py-2.5 text-sm font-semibold text-white">Promote</button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+const GROUP_LABEL: Record<MemberType, string> = {
+  founder: 'Founder',
+  team: 'Team Member',
+  intern: 'Intern',
+  student: 'Student',
+};
+
 type PrivateDetails = {
   date_of_birth: string;
   phone: string;
@@ -439,11 +513,12 @@ function MemberLinkSummary({ member }: { member: Member }) {
   );
 }
 
-function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, onReorder, onToggleVisible }: {
+function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, onReorder, onToggleVisible, onPromote }: {
   type: MemberType; title: string; hint: string; members: Member[];
   onEdit: (member: Member) => void; onAddNew: () => void; onDelete: (member: Member) => void;
   onReorder: (id: string, direction: 'up' | 'down') => void;
   onToggleVisible: (member: Member) => void;
+  onPromote: (member: Member) => void;
 }) {
   const sorted = [...members].filter(m => m.type === type).sort((a, b) => a.order - b.order);
 
@@ -479,6 +554,12 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
                     {member.credentialId}
                   </p>
                 )}
+                {member.promotedOn && member.previousType && (
+                  <p className="mt-0.5 text-[11px] text-[#0a8f63] truncate">
+                    ↑ {GROUP_LABEL[member.previousType]} → {GROUP_LABEL[member.type]} ·{' '}
+                    {new Date(member.promotedOn).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                  </p>
+                )}
                 <MemberLinkSummary member={member} />
               </div>
               {/* Show/hide without opening the editor: the most common change. */}
@@ -497,6 +578,16 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
                 <button type="button" disabled={index === sorted.length - 1} onClick={() => onReorder(member.id, 'down')} className="disabled:opacity-25 hover:text-accent leading-none px-1">▼</button>
               </div>
               <div className="flex items-center gap-3 shrink-0">
+                {member.type !== 'founder' && (
+                  <button
+                    type="button"
+                    onClick={() => onPromote(member)}
+                    title={`Move ${member.name} to another group`}
+                    className="text-xs font-semibold text-[#0a8f63] hover:text-[#076c4b]"
+                  >
+                    Promote
+                  </button>
+                )}
                 <button type="button" onClick={() => onEdit(member)} className="text-accent hover:text-[#072069] text-xs font-semibold">Edit</button>
                 <button type="button" onClick={() => onDelete(member)} className="text-red-400 hover:text-red-600 text-xs font-semibold">Delete</button>
               </div>
@@ -512,6 +603,7 @@ export default function MembersPanel() {
   const { members, addMember, updateMember, deleteMember, reorderMember } = useAdmin();
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; type: MemberType; member?: Member } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
+  const [promoteTarget, setPromoteTarget] = useState<Member | null>(null);
 
   return (
     <div>
@@ -537,6 +629,7 @@ export default function MembersPanel() {
           onToggleVisible={member =>
             updateMember(member.id, { visibleOnSite: member.visibleOnSite === false })
           }
+          onPromote={member => setPromoteTarget(member)}
         />
       ))}
 
@@ -549,6 +642,17 @@ export default function MembersPanel() {
             if (modal.mode === 'edit' && modal.member) updateMember(modal.member.id, data);
             else addMember(data);
             setModal(null);
+          }}
+        />
+      )}
+
+      {promoteTarget && (
+        <PromoteDialog
+          member={promoteTarget}
+          onClose={() => setPromoteTarget(null)}
+          onPromote={changes => {
+            updateMember(promoteTarget.id, changes);
+            setPromoteTarget(null);
           }}
         />
       )}

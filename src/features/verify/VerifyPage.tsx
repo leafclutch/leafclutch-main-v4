@@ -16,6 +16,9 @@ type Credential = {
   ended_on: string | null;
   status: string;
   organization: string;
+  promoted_on: string | null;
+  previous_role: string | null;
+  previous_type: string | null;
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -84,6 +87,12 @@ function ResultCard({ item }: { item: Credential }) {
             <Badge status={item.status} />
           </div>
           {item.role && <p className="mt-0.5 text-sm text-[#3F4A5E]">{item.role}</p>}
+          {item.promoted_on && item.previous_type && (
+            <p className="mt-1 text-xs text-[#0a8f63]">
+              {item.previous_role || TYPE_LABEL[item.previous_type] || item.previous_type} →{' '}
+              {item.role || TYPE_LABEL[item.member_type]} in {formatDate(item.promoted_on)}
+            </p>
+          )}
           <p className="mt-0.5 text-xs text-muted-foreground">{meta.note}</p>
         </div>
       </div>
