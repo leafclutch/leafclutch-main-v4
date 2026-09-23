@@ -85,6 +85,19 @@ const nextConfig: NextConfig = {
       // Training courses moved with the products they belong to.
       // Product detail pages are redirected client-side in ServiceSlugRouter,
       // because product slugs live in the database rather than in code.
+      // The portal has its own address, so the path on the main site points at
+      // it rather than serving a second copy. Scoped to the apex host: the
+      // subdomain's own root is a rewrite to /verify, and matching it here
+      // would send it round in circles.
+      {
+        source: '/verify',
+        // Anchored: a bare value is matched loosely, so 'leafclutch.com.np'
+        // also matches verify.leafclutch.com.np and even notleafclutch.com.np.
+        // Only the apex should redirect away from this path.
+        has: [{ type: 'host', value: '^leafclutch\\.com\\.np$' }],
+        destination: 'https://verify.leafclutch.com.np/',
+        permanent: true,
+      },
       {
         source: '/services/it-training/:course',
         destination: '/products/it-training/:course',

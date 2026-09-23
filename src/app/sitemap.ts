@@ -1,7 +1,12 @@
 import type { MetadataRoute } from 'next'
 import { getContentSlugs, SITE_URL } from '@/lib/serverContent'
 
-/** Static routes, highest priority first. */
+/**
+ * Static routes, highest priority first.
+ *
+ * /verify is deliberately absent: it redirects to verify.leafclutch.com.np,
+ * and a sitemap should not list URLs that redirect.
+ */
 const STATIC_ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }[] = [
   { path: '', priority: 1.0, changeFrequency: 'weekly' },
   { path: '/services', priority: 0.9, changeFrequency: 'weekly' },
@@ -14,7 +19,6 @@ const STATIC_ROUTES: { path: string; priority: number; changeFrequency: Metadata
   { path: '/careers', priority: 0.5, changeFrequency: 'weekly' },
   { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/terms', priority: 0.3, changeFrequency: 'yearly' },
-  { path: '/verify', priority: 0.4, changeFrequency: 'monthly' },
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
