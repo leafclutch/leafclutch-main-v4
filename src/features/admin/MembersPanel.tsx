@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAdmin, type CredentialStatus, type Member, type MemberType, type NewMember } from '@/app/context/AdminContext';
 import SocialIcon from '@/app/components/ui/SocialIcon';
 import {
@@ -12,6 +12,7 @@ import {
   type MemberLinkPlatform,
 } from '@/lib/memberLinks';
 import { ConfirmDialog, Field, FieldGroup, ImageDropzone, Modal } from './shared';
+import { supabase } from '@/lib/supabase';
 
 const GROUPS: { type: MemberType; title: string; hint: string }[] = [
   { type: 'founder', title: 'Founders', hint: 'Shown in the Founders section' },
@@ -23,6 +24,22 @@ const GROUPS: { type: MemberType; title: string; hint: string }[] = [
     hint: 'Course and training certificates. Usually hidden from the website, but verifiable.',
   },
 ];
+
+type PrivateDetails = {
+  date_of_birth: string;
+  phone: string;
+  personal_email: string;
+  company_email: string;
+  notes: string;
+};
+
+const EMPTY_PRIVATE: PrivateDetails = {
+  date_of_birth: '',
+  phone: '',
+  personal_email: '',
+  company_email: '',
+  notes: '',
+};
 
 /**
  * Open and closed eye, matching the show-on-website toggle. Drawn inline so the
@@ -138,6 +155,41 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
   const [credentialStatus, setCredentialStatus] =
     useState<CredentialStatus>(initial?.credentialStatus ?? 'active');
 
+  // Personal details live in member_private, which only an admin can read, so
+  // they are fetched here rather than travelling with the public member list.
+  const [priv, setPriv] = useState<PrivateDetails>(EMPTY_PRIVATE);
+  const [privState, setPrivState] = useState<'idle' | 'loading' | 'unavailable'>('idle');
+
+  useEffect(() => {
+    if (!initial?.id) return;
+    let cancelled = false;
+    setPrivState('loading');
+    void (async () => {
+      const { data, error } = await supabase
+        .from('member_private')
+        .select('date_of_birth, phone, personal_email, company_email, notes')
+        .eq('member_id', initial.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        // Most likely the table has not been created yet.
+        setPrivState('unavailable');
+        return;
+      }
+      setPrivState('idle');
+      if (data) {
+        setPriv({
+          date_of_birth: data.date_of_birth ?? '',
+          phone: data.phone ?? '',
+          personal_email: data.personal_email ?? '',
+          company_email: data.company_email ?? '',
+          notes: data.notes ?? '',
+        });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [initial?.id]);
+
   const updateLink = (id: string, next: MemberLink) =>
     setLinks(current => current.map(link => (link.id === id ? next : link)));
   const removeLink = (id: string) =>
@@ -165,6 +217,16 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
             endedOn: endedOn || undefined,
             credentialStatus,
           });
+          if (initial?.id && privState !== 'unavailable') {
+            void supabase.from('member_private').upsert({
+              member_id: initial.id,
+              date_of_birth: priv.date_of_birth || null,
+              phone: priv.phone || null,
+              personal_email: priv.personal_email || null,
+              company_email: priv.company_email || null,
+              notes: priv.notes || null,
+            });
+          }
         }}
         className="space-y-4"
       >
@@ -257,6 +319,67 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
             <option value="revoked">Revoked — no longer valid</option>
           </select>
         </Field>
+
+        {initial?.id && (
+          <FieldGroup
+            label="Private details"
+            hint="Kept for your records only. These are stored in a separate admin-only table and are never sent to a visitor — not on the website, not through the verification portal."
+          >
+            {privState === 'unavailable' ? (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+                Run supabase/18member-private.sql to store these.
+              </p>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-border bg-[#F8FAFC] p-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Date of birth">
+                    <input
+                      type="date"
+                      value={priv.date_of_birth}
+                      onChange={e => setPriv(p => ({ ...p, date_of_birth: e.target.value }))}
+                      className="admin-input"
+                    />
+                  </Field>
+                  <Field label="Phone">
+                    <input
+                      value={priv.phone}
+                      onChange={e => setPriv(p => ({ ...p, phone: e.target.value }))}
+                      className="admin-input"
+                      placeholder="+977…"
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Personal email">
+                    <input
+                      type="email"
+                      value={priv.personal_email}
+                      onChange={e => setPriv(p => ({ ...p, personal_email: e.target.value }))}
+                      className="admin-input"
+                    />
+                  </Field>
+                  <Field label="Company email">
+                    <input
+                      type="email"
+                      value={priv.company_email}
+                      onChange={e => setPriv(p => ({ ...p, company_email: e.target.value }))}
+                      className="admin-input"
+                    />
+                  </Field>
+                </div>
+                <Field label="Internal notes">
+                  <textarea
+                    value={priv.notes}
+                    onChange={e => setPriv(p => ({ ...p, notes: e.target.value }))}
+                    rows={2}
+                    className="admin-input resize-none"
+                    placeholder="Anything you want on file about this person."
+                  />
+                </Field>
+              </div>
+            )}
+          </FieldGroup>
+        )}
 
         <FieldGroup label="Contact & Social Links" hint="Add as many as you like. Untick a link to keep it on record without showing it on the website.">
           <div className="space-y-2">
