@@ -19,6 +19,8 @@ type Credential = {
   promoted_on: string | null;
   previous_role: string | null;
   previous_type: string | null;
+  /** Credential at the start of the promotion chain; shared by one person's records. */
+  root_credential: string | null;
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -53,6 +55,68 @@ const formatDate = (value: string | null) =>
         year: 'numeric',
       })
     : null;
+
+const article = (word: string) => (/^[aeiou]/i.test(word) ? 'an' : 'a');
+
+/**
+ * One line per person who holds more than one credential.
+ *
+ * A promotion leaves two records — the internship and the role that followed —
+ * so without this the portal just lists two results for the same name and
+ * leaves the reader to work out the relationship.
+ */
+function Progression({ results }: { results: Credential[] }) {
+  // Grouped by the promotion chain, not the name. Kabita's two records were
+  // spelled two ways, which is exactly the case a name match gets wrong.
+  const people = new Map<string, Credential[]>();
+  for (const item of results) {
+    const key = item.root_credential ?? item.credential_id;
+    people.set(key, [...(people.get(key) ?? []), item]);
+  }
+
+  const stories = [...people.values()]
+    .filter(items => items.length > 1 && items.some(i => i.promoted_on))
+    .map(items => {
+      // Oldest first, so the sentence reads in the order things happened.
+      const ordered = [...items].sort((a, b) =>
+        (a.joined_on ?? '').localeCompare(b.joined_on ?? ''),
+      );
+      const first = ordered[0];
+      const steps = ordered.slice(1).map(step => {
+        const label = TYPE_LABEL[step.member_type] ?? step.member_type;
+        const when = formatDate(step.promoted_on ?? step.joined_on);
+        return `promoted to ${label}${when ? ` in ${when}` : ''}`;
+      });
+      const startLabel = TYPE_LABEL[first.member_type] ?? first.member_type;
+      const startWhen = formatDate(first.joined_on);
+      return {
+        key: first.credential_id,
+        // The most recent record carries the current spelling.
+        name: ordered[ordered.length - 1].holder_name,
+        text: `Joined as ${article(startLabel)} ${startLabel}${startWhen ? ` in ${startWhen}` : ''}, ${steps.join(', ')}.`,
+        count: items.length,
+      };
+    });
+
+  if (stories.length === 0) return null;
+
+  return (
+    <div className="mb-5 space-y-3">
+      {stories.map(story => (
+        <div
+          key={story.key}
+          className="flex gap-3 rounded-2xl border border-[#3BE3A0]/40 bg-[#3BE3A0]/10 px-4 py-3"
+        >
+          <span aria-hidden="true" className="text-lg leading-none text-[#0a8f63]">↑</span>
+          <p className="text-sm leading-relaxed text-[#0F1729]">
+            <span className="font-bold">{story.name}</span> holds {story.count}{' '}
+            credentials with us. {story.text}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Badge({ status }: { status: string }) {
   const meta = STATUS[status] ?? STATUS.active;
@@ -269,6 +333,7 @@ export default function VerifyPage() {
                 : `${results.length} credentials found`}{' '}
               for &ldquo;{searched}&rdquo;
             </p>
+            <Progression results={results} />
             <div className="space-y-4">
               {results.map(item => (
                 <ResultCard key={item.credential_id} item={item} />
