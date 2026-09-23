@@ -53,6 +53,9 @@ def request(method: str, url: str, key: str, *, body=None, headers=None):
         return error.code, error.read()
 
 
+FIELDS = ("date_of_birth", "phone", "personal_email", "company_email")
+
+
 def clean(value: str | None) -> str:
     return re.sub(r"\s+", " ", (value or "").strip())
 
@@ -73,7 +76,8 @@ def main() -> None:
     by_name = {norm(m["name"]): m["id"] for m in members}
 
     rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8-sig")))
-    payload, unmatched = [], []
+    merged: dict[str, dict] = {}
+    unmatched = []
     for row in rows:
         member_id = row["id"] if row["id"] in by_id else by_name.get(norm(row["name"]))
         if not member_id:
@@ -86,15 +90,25 @@ def main() -> None:
             "personal_email": clean(row["personal_email"]) or None,
             "company_email": clean(row["company_email"]) or None,
         }
-        # Nothing worth storing for this person.
-        if any(entry[k] for k in ("date_of_birth", "phone", "personal_email", "company_email")):
-            payload.append(entry)
+        if not any(entry[k] for k in FIELDS):
+            continue  # nothing worth storing for this person
+        # Duplicate rows in the export can both map to one member once the
+        # extra copy has been deleted. Merge them, preferring whichever row
+        # actually filled a field, so a value is never overwritten with null.
+        existing_entry = merged.get(member_id)
+        if existing_entry:
+            for field in FIELDS:
+                existing_entry[field] = existing_entry[field] or entry[field]
+        else:
+            merged[member_id] = entry
+
+    payload = list(merged.values())
 
     print(f"{len(rows)} rows in the export")
     print(f"  {len(payload)} have private details to store")
     print(f"  {len(unmatched)} could not be matched to a member{': ' + ', '.join(unmatched) if unmatched else ''}")
     filled = lambda k: sum(1 for e in payload if e[k])
-    for column in ("date_of_birth", "phone", "personal_email", "company_email"):
+    for column in FIELDS:
         print(f"    {column:15} {filled(column)}")
 
     if not apply_changes:
