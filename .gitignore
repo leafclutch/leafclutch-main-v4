@@ -4,6 +4,10 @@ dist/
 build/
 .cache/
 .env*
+# Any env file, however it is named — a file called "…env.local" slipped past
+# the rule above and reached a commit with a live service-role key in it.
+*env.local
+*.env
 .vite/
 vite.config.*.timestamp-*
 *.tsbuildinfo
