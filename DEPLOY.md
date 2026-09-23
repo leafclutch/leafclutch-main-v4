@@ -120,10 +120,15 @@ same on Workers — the runtime is not Node.
 In the Cloudflare dashboard: **Workers & Pages → leafclutch-website → Settings
 → Domains & Routes → Add custom domain**
 
-Add both:
+Add all three:
 
 - `leafclutch.com.np`
 - `www.leafclutch.com.np`
+- `verify.leafclutch.com.np`
+
+`verify` is served by this same Worker: a rewrite in `next.config.ts` renders
+`/verify` at that host's root, so the address bar keeps showing
+`verify.leafclutch.com.np` rather than redirecting.
 
 Cloudflare issues the certificates. `www` is redirected to the apex by a
 redirect rule in `next.config.ts`, so both resolve but only one is canonical.

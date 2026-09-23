@@ -206,13 +206,16 @@ export default function AboutPage() {
     )
     .sort((a, b) => a.order - b.order)
     .slice(0, 4);
-  const founders = members
+  // Row-level security already hides these from visitors; filtering here as
+  // well keeps them off the page for a signed-in admin, who can read them all.
+  const listed = members.filter((m) => m.visibleOnSite !== false);
+  const founders = listed
     .filter((m) => m.type === "founder")
     .sort((a, b) => a.order - b.order);
-  const teamMembers = members
+  const teamMembers = listed
     .filter((m) => m.type === "team")
     .sort((a, b) => a.order - b.order);
-  const interns = members
+  const interns = listed
     .filter((m) => m.type === "intern")
     .sort((a, b) => a.order - b.order);
   const [internsOpen, setInternsOpen] = useState(false);

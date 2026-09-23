@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAdmin, type Member, type MemberType, type NewMember } from '@/app/context/AdminContext';
+import { useAdmin, type CredentialStatus, type Member, type MemberType, type NewMember } from '@/app/context/AdminContext';
 import SocialIcon from '@/app/components/ui/SocialIcon';
 import {
   MEMBER_LINK_PLATFORMS,
@@ -17,7 +17,35 @@ const GROUPS: { type: MemberType; title: string; hint: string }[] = [
   { type: 'founder', title: 'Founders', hint: 'Shown in the Founders section' },
   { type: 'team', title: 'Team Members', hint: 'Shown in the Our Team Members section' },
   { type: 'intern', title: 'Interns', hint: 'Shown in the Our Intern Team section' },
+  {
+    type: 'student',
+    title: 'Students',
+    hint: 'Course and training certificates. Usually hidden from the website, but verifiable.',
+  },
 ];
+
+/**
+ * Open and closed eye, matching the show-on-website toggle. Drawn inline so the
+ * two states share a box and the icon does not shift when it changes.
+ */
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`h-5 w-5 shrink-0 ${open ? 'text-accent' : 'text-muted-foreground'}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {!open && <path d="m4 20 16-16" />}
+    </svg>
+  );
+}
 
 /** Builds the starting link list, upgrading members saved before this editor existed. */
 function initialLinks(member?: Member): MemberLink[] {
@@ -104,6 +132,11 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
   const [photo, setPhoto] = useState(initial?.photo ?? '');
   const [links, setLinks] = useState<MemberLink[]>(() => initialLinks(initial));
   const [type, setType] = useState<MemberType>(initial?.type ?? defaultType);
+  const [visibleOnSite, setVisibleOnSite] = useState(initial?.visibleOnSite !== false);
+  const [joinedOn, setJoinedOn] = useState(initial?.joinedOn ?? '');
+  const [endedOn, setEndedOn] = useState(initial?.endedOn ?? '');
+  const [credentialStatus, setCredentialStatus] =
+    useState<CredentialStatus>(initial?.credentialStatus ?? 'active');
 
   const updateLink = (id: string, next: MemberLink) =>
     setLinks(current => current.map(link => (link.id === id ? next : link)));
@@ -127,6 +160,10 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
             links: cleaned,
             linkedin: cleaned.find(link => link.platform === 'linkedin')?.url,
             type,
+            visibleOnSite,
+            joinedOn: joinedOn || undefined,
+            endedOn: endedOn || undefined,
+            credentialStatus,
           });
         }}
         className="space-y-4"
@@ -139,6 +176,86 @@ function MemberFormModal({ initial, defaultType, onClose, onSave }: { initial?: 
         </Field>
         <Field label="Role / Designation *">
           <input required value={role} onChange={e => setRole(e.target.value)} className="admin-input" placeholder="e.g. Founder | Director | CTO" />
+        </Field>
+
+        {initial?.credentialId && (
+          <FieldGroup
+            label="Credential ID"
+            hint="Issued automatically and never reused. This is what someone types into the verification portal."
+          >
+            <div className="flex items-center gap-2">
+              <code className="flex-1 rounded-lg border border-border bg-[#F8FAFC] px-3 py-2 font-mono text-sm text-foreground">
+                {initial.credentialId}
+              </code>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(initial.credentialId!)}
+                className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-accent"
+              >
+                Copy
+              </button>
+            </div>
+          </FieldGroup>
+        )}
+
+        <FieldGroup
+          label="Show on website"
+          hint="Turn this off to keep someone verifiable without listing them on the About page — past staff, or students who were never on the team."
+        >
+          <button
+            type="button"
+            role="switch"
+            aria-checked={visibleOnSite}
+            onClick={() => setVisibleOnSite(v => !v)}
+            className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+              visibleOnSite
+                ? 'border-accent/40 bg-accent/5'
+                : 'border-border bg-[#F8FAFC]'
+            }`}
+          >
+            <EyeIcon open={visibleOnSite} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-foreground">
+                {visibleOnSite ? 'Visible on the website' : 'Hidden from the website'}
+              </span>
+              <span className="block text-[11px] text-muted-foreground">
+                {visibleOnSite
+                  ? 'Appears on the About page and can be verified.'
+                  : 'Not listed anywhere public, but still verifiable by name or credential ID.'}
+              </span>
+            </span>
+            <span
+              className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
+                visibleOnSite ? 'bg-accent' : 'bg-[#cbd5e1]'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all ${
+                  visibleOnSite ? 'left-[18px]' : 'left-0.5'
+                }`}
+              />
+            </span>
+          </button>
+        </FieldGroup>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Joined on" hint="Optional">
+            <input type="date" value={joinedOn} onChange={e => setJoinedOn(e.target.value)} className="admin-input" />
+          </Field>
+          <Field label="Ended on" hint="Leave empty if still with us">
+            <input type="date" value={endedOn} onChange={e => setEndedOn(e.target.value)} className="admin-input" />
+          </Field>
+        </div>
+        <Field label="Credential status">
+          <select
+            value={credentialStatus}
+            onChange={e => setCredentialStatus(e.target.value as CredentialStatus)}
+            className="admin-input"
+          >
+            <option value="active">Active — currently with Leafclutch</option>
+            <option value="completed">Completed — tenure or course finished</option>
+            <option value="revoked">Revoked — no longer valid</option>
+          </select>
         </Field>
 
         <FieldGroup label="Contact & Social Links" hint="Add as many as you like. Untick a link to keep it on record without showing it on the website.">
@@ -199,10 +316,11 @@ function MemberLinkSummary({ member }: { member: Member }) {
   );
 }
 
-function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, onReorder }: {
+function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, onReorder, onToggleVisible }: {
   type: MemberType; title: string; hint: string; members: Member[];
   onEdit: (member: Member) => void; onAddNew: () => void; onDelete: (member: Member) => void;
   onReorder: (id: string, direction: 'up' | 'down') => void;
+  onToggleVisible: (member: Member) => void;
 }) {
   const sorted = [...members].filter(m => m.type === type).sort((a, b) => a.order - b.order);
 
@@ -224,10 +342,33 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
                 {member.photo ? <img src={member.photo} alt="" className="h-full w-full object-cover" /> : member.name.slice(0, 1).toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground truncate">{member.name}</p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {member.name}
+                  {member.visibleOnSite === false && (
+                    <span className="ml-2 rounded-full bg-[#E9EEF6] px-2 py-0.5 align-middle text-[10px] font-semibold text-muted-foreground">
+                      hidden
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground truncate">{member.role}</p>
+                {member.credentialId && (
+                  <p className="mt-0.5 font-mono text-[11px] text-muted-foreground truncate">
+                    {member.credentialId}
+                  </p>
+                )}
                 <MemberLinkSummary member={member} />
               </div>
+              {/* Show/hide without opening the editor: the most common change. */}
+              <button
+                type="button"
+                onClick={() => onToggleVisible(member)}
+                title={member.visibleOnSite === false ? 'Show on website' : 'Hide from website'}
+                aria-label={member.visibleOnSite === false ? 'Show on website' : 'Hide from website'}
+                aria-pressed={member.visibleOnSite !== false}
+                className="shrink-0 rounded-lg p-1.5 transition-colors hover:bg-white"
+              >
+                <EyeIcon open={member.visibleOnSite !== false} />
+              </button>
               <div className="flex items-center gap-1 shrink-0">
                 <button type="button" disabled={index === 0} onClick={() => onReorder(member.id, 'up')} className="disabled:opacity-25 hover:text-accent leading-none px-1">▲</button>
                 <button type="button" disabled={index === sorted.length - 1} onClick={() => onReorder(member.id, 'down')} className="disabled:opacity-25 hover:text-accent leading-none px-1">▼</button>
@@ -255,7 +396,7 @@ export default function MembersPanel() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[.18em] text-accent">People</p>
           <h2 className="text-2xl font-bold text-foreground mt-1">Members</h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage the founders, team members and interns shown on the About Us page.</p>
+          <p className="text-sm text-muted-foreground mt-1">Founders, team, interns and students. Everyone here gets a credential ID that can be checked on the verification portal; the eye decides who is listed on the About page.</p>
         </div>
       </div>
 
@@ -270,6 +411,9 @@ export default function MembersPanel() {
           onEdit={member => setModal({ mode: 'edit', type: member.type, member })}
           onDelete={member => setDeleteTarget(member)}
           onReorder={reorderMember}
+          onToggleVisible={member =>
+            updateMember(member.id, { visibleOnSite: member.visibleOnSite === false })
+          }
         />
       ))}
 

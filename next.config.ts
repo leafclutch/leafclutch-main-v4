@@ -61,6 +61,25 @@ const nextConfig: NextConfig = {
       { source: '/admin', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
     ]
   },
+  async rewrites() {
+    // beforeFiles, because a plain array runs only after filesystem routes are
+    // checked — and `/` already resolves to the home page, so the rule would
+    // never be reached.
+    return {
+      beforeFiles: [
+        // The verification portal has its own subdomain but is served by this
+        // app. Its root renders /verify without a redirect, so the address bar
+        // keeps showing verify.leafclutch.com.np.
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'verify.leafclutch.com.np' }],
+          destination: '/verify',
+        },
+      ],
+      afterFiles: [],
+      fallback: [],
+    }
+  },
   async redirects() {
     return [
       // Training courses moved with the products they belong to.
@@ -69,6 +88,15 @@ const nextConfig: NextConfig = {
       {
         source: '/services/it-training/:course',
         destination: '/products/it-training/:course',
+        permanent: true,
+      },
+      // Redirects match in array order, and `/:path*` leaves a literal
+      // ":path*" in the destination when the path is empty — so the bare www
+      // root, which is how most people type it, is handled first.
+      {
+        source: '/',
+        has: [{ type: 'host', value: 'www.leafclutch.com.np' }],
+        destination: 'https://leafclutch.com.np/',
         permanent: true,
       },
       // One canonical host: www folds into the apex so link equity and

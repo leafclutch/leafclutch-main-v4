@@ -159,7 +159,7 @@ export type WebsiteImage = {
   updatedAt: string;
 };
 
-export type MemberType = "founder" | "team" | "intern";
+export type MemberType = "founder" | "team" | "intern" | "student";
 export type Member = {
   id: string;
   name: string;
@@ -172,7 +172,19 @@ export type Member = {
   type: MemberType;
   order: number;
   updatedAt: string;
+  /** LCT-<year>-<role>-<number>, issued by the database on insert. */
+  credentialId?: string;
+  /**
+   * The eye toggle: whether this person appears on the About page. Absent
+   * means visible, so records predating the column are not hidden by upgrade.
+   */
+  visibleOnSite?: boolean;
+  joinedOn?: string;
+  endedOn?: string;
+  credentialStatus?: CredentialStatus;
 };
+
+export type CredentialStatus = "active" | "completed" | "revoked";
 
 export type CompanyServiceWorkflow = {
   step: number;
@@ -1653,9 +1665,19 @@ const mapSupabaseMember = (row: any): Member => ({
   photo: row.photo ?? "",
   linkedin: row.linkedin ?? undefined,
   links: normalizeMemberLinks(row.links, row),
-  type: row.type === "founder" || row.type === "intern" ? row.type : "team",
+  type:
+    row.type === "founder" || row.type === "intern" || row.type === "student"
+      ? row.type
+      : "team",
   order: Number(row.sort_order ?? row.order ?? 0),
   updatedAt: row.updated_at ?? row.updatedAt ?? today(),
+  credentialId: row.credential_id ?? undefined,
+  // Defaults to visible so a member added before this column existed does not
+  // silently disappear from the site.
+  visibleOnSite: row.visible_on_site ?? true,
+  joinedOn: row.joined_on ?? undefined,
+  endedOn: row.ended_on ?? undefined,
+  credentialStatus: row.credential_status ?? "active",
 });
 
 const mapSupabaseCompanyService = (row: any): CompanyService => ({
@@ -1928,6 +1950,12 @@ const syncSupabaseContent = async ({
         type: member.type,
         sort_order: member.order,
         updated_at: new Date(member.updatedAt || Date.now()).toISOString(),
+        // credential_id is deliberately absent: the database issues it on
+        // insert and it must never be rewritten from client state.
+        visible_on_site: member.visibleOnSite !== false,
+        joined_on: member.joinedOn || null,
+        ended_on: member.endedOn || null,
+        credential_status: member.credentialStatus ?? "active",
       };
     });
 
