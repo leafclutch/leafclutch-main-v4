@@ -84,7 +84,11 @@ const serviceNavDefaults = [
 /** Careers sits inside "Others" as a nested submenu. */
 const careerLinksNested = [
   { name: "Jobs", desc: "Open roles on our team", href: "/careers#jobs" },
-  { name: "Internships", desc: "Start your career with us", href: "/careers#internships" },
+  {
+    name: "Internships",
+    desc: "Start your career with us",
+    href: "/careers#internships",
+  },
 ];
 
 const otherLinks = [
@@ -92,7 +96,7 @@ const otherLinks = [
   {
     name: "Verify Certificate",
     desc: "Check a Leafclutch certificate",
-    href: "https://verify.leafclutchtechnologies.com.np",
+    href: "https://verify.leafclutch.com.np",
     external: true,
   },
   { name: "FAQ", desc: "Answers to common questions", href: "/faq" },
@@ -169,29 +173,31 @@ export default function Navbar() {
       iconImage: service.iconImage || "",
       art: serviceArtSrc(service.id),
     }));
-  const services = [...managedServices].sort(byDisplayOrder).map((service, index) => {
-    const fallback = serviceNavDefaults.find(
-      (item) => item.slug === service.id,
-    );
-    return {
-      name: service.title,
-      slug: service.id,
-      // "Small Label (Top Text)" from Admin > Products > Edit Product.
-      label: service.label || "",
-      desc:
-        service.description ||
-        fallback?.desc ||
-        "Explore this solution from Leafclutch.",
-      iconImage: service.iconImage || "",
-      icon: fallback?.icon ?? (
-        <>
-          <rect x="4" y="4" width="16" height="16" rx="2" />
-          <path d="M8 9h8M8 13h5" />
-        </>
-      ),
-      order: index,
-    };
-  });
+  const services = [...managedServices]
+    .sort(byDisplayOrder)
+    .map((service, index) => {
+      const fallback = serviceNavDefaults.find(
+        (item) => item.slug === service.id,
+      );
+      return {
+        name: service.title,
+        slug: service.id,
+        // "Small Label (Top Text)" from Admin > Products > Edit Product.
+        label: service.label || "",
+        desc:
+          service.description ||
+          fallback?.desc ||
+          "Explore this solution from Leafclutch.",
+        iconImage: service.iconImage || "",
+        icon: fallback?.icon ?? (
+          <>
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <path d="M8 9h8M8 13h5" />
+          </>
+        ),
+        order: index,
+      };
+    });
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -297,7 +303,11 @@ export default function Navbar() {
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
             </div>
@@ -491,9 +501,20 @@ export default function Navbar() {
                 >
                   <span className="mega-dropdown-icon">
                     {item.art ? (
-                      <img src={item.art} alt="" width={40} height={30} loading="lazy" className="h-7 w-auto" />
+                      <img
+                        src={item.art}
+                        alt=""
+                        width={40}
+                        height={30}
+                        loading="lazy"
+                        className="h-7 w-auto"
+                      />
                     ) : item.iconImage ? (
-                      <img src={item.iconImage} alt="" className="h-5 w-5 rounded object-cover" />
+                      <img
+                        src={item.iconImage}
+                        alt=""
+                        className="h-5 w-5 rounded object-cover"
+                      />
                     ) : (
                       <span aria-hidden="true">{item.icon}</span>
                     )}
@@ -528,17 +549,24 @@ export default function Navbar() {
                   type="button"
                   aria-expanded={careersOpen}
                   aria-haspopup="true"
-                  onClick={() => (careersOpen ? setCareersOpen(false) : openCareers())}
+                  onClick={() =>
+                    careersOpen ? setCareersOpen(false) : openCareers()
+                  }
                   onFocus={openCareers}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") setCareersOpen(false);
-                    if (e.key === "ArrowDown") { e.preventDefault(); openCareers(); }
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      openCareers();
+                    }
                   }}
                   className={`mega-dropdown-item group w-full text-left rounded-xl transition-colors ${
                     careersOpen ? "bg-secondary" : ""
                   }`}
                 >
-                  <span className="mega-dropdown-icon" aria-hidden="true">💼</span>
+                  <span className="mega-dropdown-icon" aria-hidden="true">
+                    💼
+                  </span>
                   <span>
                     <span
                       className={`mega-dropdown-item-name transition-colors inline-flex items-center gap-1 ${
@@ -554,10 +582,16 @@ export default function Navbar() {
                         strokeWidth={2}
                         aria-hidden="true"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </span>
-                    <span className="mega-dropdown-item-desc">Jobs &amp; internships</span>
+                    <span className="mega-dropdown-item-desc">
+                      Jobs &amp; internships
+                    </span>
                   </span>
                 </button>
 
@@ -565,7 +599,9 @@ export default function Navbar() {
                   <div
                     onMouseEnter={openCareers}
                     onMouseLeave={closeCareersSoon}
-                    onKeyDown={(e) => { if (e.key === "Escape") setCareersOpen(false); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") setCareersOpen(false);
+                    }}
                     /* pt-2 is a hoverable bridge, not a margin: a real gap here
                        would drop the hover the moment you move toward the panel. */
                     className="absolute left-0 top-full z-30 w-64 pt-2"
@@ -573,7 +609,10 @@ export default function Navbar() {
                     <div className="overflow-hidden rounded-xl border border-border bg-white py-1.5 shadow-2xl">
                       <Link
                         href="/careers"
-                        onClick={() => { setOthersOpen(false); setCareersOpen(false); }}
+                        onClick={() => {
+                          setOthersOpen(false);
+                          setCareersOpen(false);
+                        }}
                         className="block px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-accent hover:bg-secondary"
                       >
                         All Openings →
@@ -583,13 +622,18 @@ export default function Navbar() {
                         <Link
                           key={item.name}
                           href={item.href}
-                          onClick={() => { setOthersOpen(false); setCareersOpen(false); }}
+                          onClick={() => {
+                            setOthersOpen(false);
+                            setCareersOpen(false);
+                          }}
                           className="group/sub block px-4 py-2.5 transition-colors hover:bg-secondary"
                         >
                           <span className="block text-sm font-semibold text-foreground transition-colors group-hover/sub:text-accent">
                             {item.name}
                           </span>
-                          <span className="block text-[11px] text-muted-foreground">{item.desc}</span>
+                          <span className="block text-[11px] text-muted-foreground">
+                            {item.desc}
+                          </span>
                         </Link>
                       ))}
                     </div>
@@ -607,12 +651,16 @@ export default function Navbar() {
                     onClick={() => setOthersOpen(false)}
                     className="mega-dropdown-item group"
                   >
-                    <span className="mega-dropdown-icon" aria-hidden="true">↗</span>
+                    <span className="mega-dropdown-icon" aria-hidden="true">
+                      ↗
+                    </span>
                     <span>
                       <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
                         {item.name}
                       </span>
-                      <span className="mega-dropdown-item-desc">{item.desc}</span>
+                      <span className="mega-dropdown-item-desc">
+                        {item.desc}
+                      </span>
                     </span>
                   </a>
                 ) : (
@@ -622,12 +670,16 @@ export default function Navbar() {
                     onClick={() => setOthersOpen(false)}
                     className="mega-dropdown-item group"
                   >
-                    <span className="mega-dropdown-icon" aria-hidden="true">→</span>
+                    <span className="mega-dropdown-icon" aria-hidden="true">
+                      →
+                    </span>
                     <span>
                       <span className="mega-dropdown-item-name group-hover:text-accent transition-colors">
                         {item.name}
                       </span>
-                      <span className="mega-dropdown-item-desc">{item.desc}</span>
+                      <span className="mega-dropdown-item-desc">
+                        {item.desc}
+                      </span>
                     </span>
                   </Link>
                 ),
@@ -668,13 +720,27 @@ export default function Navbar() {
                 className="mnav-head"
               >
                 Services
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                <svg
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m6 9 6 6 6-6"
+                  />
                 </svg>
               </button>
               {servicesOpen && (
                 <div className="mnav-panel">
-                  <Link href="/services" onClick={() => setMenuOpen(false)} className="mnav-all">
+                  <Link
+                    href="/services"
+                    onClick={() => setMenuOpen(false)}
+                    className="mnav-all"
+                  >
                     All Services <span aria-hidden="true">→</span>
                   </Link>
                   {companyServiceLinks.map((item) => (
@@ -700,13 +766,27 @@ export default function Navbar() {
                 className="mnav-head"
               >
                 Products
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                <svg
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m6 9 6 6 6-6"
+                  />
                 </svg>
               </button>
               {productsOpen && (
                 <div className="mnav-panel">
-                  <Link href="/products" onClick={() => setMenuOpen(false)} className="mnav-all">
+                  <Link
+                    href="/products"
+                    onClick={() => setMenuOpen(false)}
+                    className="mnav-all"
+                  >
                     All Products <span aria-hidden="true">→</span>
                   </Link>
                   {services.map((s) => (
@@ -732,8 +812,18 @@ export default function Navbar() {
                 className="mnav-head"
               >
                 Others
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                <svg
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m6 9 6 6 6-6"
+                  />
                 </svg>
               </button>
               {othersOpen && (
@@ -766,7 +856,9 @@ export default function Navbar() {
                         className="mnav-item"
                       >
                         {item.name}
-                        <span className="mnav-ext" aria-hidden="true">↗</span>
+                        <span className="mnav-ext" aria-hidden="true">
+                          ↗
+                        </span>
                       </a>
                     ) : (
                       <Link
