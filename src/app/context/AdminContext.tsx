@@ -186,6 +186,8 @@ export type Member = {
   promotedOn?: string;
   previousRole?: string;
   previousType?: MemberType;
+  /** The earlier record this one was promoted from. */
+  promotedFrom?: string;
 };
 
 export type CredentialStatus = "active" | "completed" | "revoked";
@@ -301,6 +303,7 @@ type AdminContextValue = {
   updateWebsiteImage: (id: string, changes: Partial<WebsiteImage>) => void;
   deleteWebsiteImage: (id: string) => void;
   addMember: (member: NewMember) => void;
+  promoteMember: (id: string, to: { type: MemberType; role: string; on: string }) => void;
   updateMember: (id: string, changes: Partial<Member>) => void;
   deleteMember: (id: string) => void;
   reorderMember: (id: string, direction: "up" | "down") => void;
@@ -1685,6 +1688,7 @@ const mapSupabaseMember = (row: any): Member => ({
   promotedOn: row.promoted_on ?? undefined,
   previousRole: row.previous_role ?? undefined,
   previousType: row.previous_type ?? undefined,
+  promotedFrom: row.promoted_from ?? undefined,
 });
 
 const mapSupabaseCompanyService = (row: any): CompanyService => ({
@@ -1966,6 +1970,7 @@ const syncSupabaseContent = async ({
         promoted_on: member.promotedOn || null,
         previous_role: member.previousRole || null,
         previous_type: member.previousType || null,
+        promoted_from: member.promotedFrom || null,
       };
     });
 
@@ -2753,6 +2758,48 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setWebsiteImages((current) => current.filter((image) => image.id !== id));
   };
 
+  /**
+   * Promotion keeps both records.
+   *
+   * The engagement being left behind is closed off with an end date and a
+   * `completed` credential, and a new row opens for the new one. Each keeps
+   * its own credential, so a certificate issued for the internship still
+   * verifies after the person joins the team.
+   */
+  const promoteMember = (id: string, to: { type: MemberType; role: string; on: string }) => {
+    setMembers((current) => {
+      const from = current.find((m) => m.id === id);
+      if (!from) return current;
+      const siblingOrders = current
+        .filter((m) => m.type === to.type)
+        .map((m) => m.order);
+      return [
+        ...current.map((m) =>
+          m.id === id
+            ? { ...m, credentialStatus: "completed" as CredentialStatus, endedOn: to.on, updatedAt: today() }
+            : m,
+        ),
+        {
+          ...from,
+          id: genId("member"),
+          // Left blank so the database issues one for the new role.
+          credentialId: undefined,
+          type: to.type,
+          role: to.role,
+          joinedOn: to.on,
+          endedOn: undefined,
+          credentialStatus: "active" as CredentialStatus,
+          promotedFrom: from.id,
+          promotedOn: to.on,
+          previousType: from.type,
+          previousRole: from.role,
+          order: siblingOrders.length ? Math.max(...siblingOrders) + 1 : 0,
+          updatedAt: today(),
+        },
+      ];
+    });
+  };
+
   const addMember = (member: NewMember) => {
     setMembers((current) => {
       const siblingOrders = current
@@ -3114,6 +3161,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         deleteStat,
         reorderStat,
         addMember,
+        promoteMember,
         updateMember,
         deleteMember,
         reorderMember,

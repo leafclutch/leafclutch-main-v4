@@ -2,37 +2,54 @@
 -- Leafclutch Technologies — promotions
 -- Run after: 18member-private.sql
 -- ============================================================================
--- Someone who joins as an intern and later becomes part of the team is one
--- person with one history, not two records. These columns record the move.
+-- A promotion creates a second record rather than editing the first.
 --
--- The credential ID deliberately does NOT change on promotion. It is printed
--- on certificates and offer letters and typed into the verification portal, so
--- reissuing it would invalidate every copy already handed out. An intern who
--- becomes an employee keeps LCT-<year>-INT-<n>; the portal shows the current
--- role alongside the history.
+-- Someone who interns and is then taken on has completed two distinct
+-- engagements, and each has its own credential: the internship closes as
+-- `completed` with an end date, and a new row opens with a fresh EMP number.
+-- Both stay verifiable for ever, so an internship certificate issued in
+-- January still checks out after the person joins the team in May.
+--
+-- `promoted_from` links the new record back to the one it grew out of, and
+-- previous_role / previous_type / promoted_on are copied onto it so the portal
+-- can show the progression without a join.
 --
 -- Safe to re-run.
 -- ============================================================================
 
+
+-- ---------------------------------------------------------------------------
+-- 1. Columns
+-- ---------------------------------------------------------------------------
+
 alter table public.members
   add column if not exists promoted_on   date,
   add column if not exists previous_role text,
-  add column if not exists previous_type text;
+  add column if not exists previous_type text,
+  add column if not exists promoted_from text;
 
 alter table public.members drop constraint if exists members_previous_type_check;
 alter table public.members
   add constraint members_previous_type_check
   check (previous_type is null or previous_type in ('founder', 'team', 'intern', 'student'));
 
+-- Deliberately not a foreign key: deleting an old record should not cascade
+-- into the newer one, which stands on its own.
+comment on column public.members.promoted_from is
+  'The member record this one was promoted from. The earlier record keeps its own credential.';
 comment on column public.members.promoted_on is
-  'When this person moved to their current type. Null if they never changed.';
+  'When this record began, where it began as a promotion from another.';
 
 
 -- ---------------------------------------------------------------------------
--- The portal reports the progression
+-- 2. The portal reports the progression
 -- ---------------------------------------------------------------------------
 
-create or replace function public.verify_credential(p_query text)
+-- The signature gains three columns, and Postgres will not let a replacement
+-- change a function's return type, so the old one is dropped first.
+drop function if exists public.verify_credential(text);
+
+create function public.verify_credential(p_query text)
 returns table (
   credential_id text,
   holder_name   text,
@@ -77,6 +94,9 @@ as $$
    order by
      (upper(replace(m.credential_id, ' ', '')) = upper(replace(q.term, ' ', ''))) desc,
      (lower(m.name) = lower(q.term)) desc,
+     -- Current engagements first, then the most recent history.
+     (m.credential_status = 'active') desc,
+     m.joined_on desc nulls last,
      m.name
    limit 20;
 $$;
@@ -86,26 +106,24 @@ grant execute on function public.verify_credential(text) to anon, authenticated;
 
 
 -- ---------------------------------------------------------------------------
--- One-off: Kabita Adhikari
+-- 3. One-off: Kabita Adhikari
 -- ---------------------------------------------------------------------------
--- The historical export held her twice, as an intern from January and as a
--- team member from May, because the promotion was entered as a new record
--- rather than a change to the existing one. They are the same person.
---
--- The intern record is kept: it has her joining date and her contact details,
--- and LCT-2026-INT-0006 is the credential she was actually issued. The later
--- row is removed once its information has been folded in.
+-- She interned from January and joined the team in May. The export already
+-- holds both, which is the right shape — they simply were not linked, the
+-- internship was never closed off, and the surname is spelled two ways.
 
 update public.members
-   set type          = 'team',
-       role          = 'Graphic Designer',
+   set credential_status = 'completed',
+       ended_on          = date '2026-05-01'
+ where id = '06f985a2-1c69-4a0c-af6d-e86f9dd9bcb5';
+
+update public.members
+   set name          = 'Kabita Adhikari',
+       promoted_from = '06f985a2-1c69-4a0c-af6d-e86f9dd9bcb5',
        promoted_on   = date '2026-05-01',
        previous_type = 'intern',
-       previous_role = 'Graphic Design'
- where id = '06f985a2-1c69-4a0c-af6d-e86f9dd9bcb5'
-   and type = 'intern';
-
-delete from public.members
+       previous_role = 'Graphic Design',
+       joined_on     = date '2026-05-01'
  where id = 'de3fcdd4-8e8c-4c26-87c2-0aa17e33b878';
 
 
@@ -115,10 +133,12 @@ delete from public.members
 select
   (select count(*) from information_schema.columns
      where table_schema = 'public' and table_name = 'members'
-       and column_name in ('promoted_on', 'previous_role', 'previous_type')) = 3
+       and column_name in ('promoted_on', 'previous_role', 'previous_type', 'promoted_from')) = 4
     as columns_added,
-  (select count(*) from public.verify_credential(
-     (select credential_id from public.members limit 1))) = 1
-    as lookup_still_works,
-  (select count(*) from public.members where name ilike 'Kabita%') = 1
-    as kabita_merged;
+  (select count(*) from public.verify_credential('Kabita')) = 2
+    as kabita_has_both_credentials,
+  (select count(*) from public.members
+     where name = 'Kabita Adhikari' and credential_status = 'completed') = 1
+    as internship_closed,
+  (select count(*) from public.members where promoted_from is not null) = 1
+    as promotion_linked;

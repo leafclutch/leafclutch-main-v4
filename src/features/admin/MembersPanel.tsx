@@ -26,16 +26,16 @@ const GROUPS: { type: MemberType; title: string; hint: string }[] = [
 ];
 
 /**
- * Moves someone to a different group while keeping their history.
+ * Moves someone to a different group, keeping both records.
  *
- * The credential ID is deliberately left alone: it is printed on certificates
- * and typed into the verification portal, so reissuing it would invalidate
- * every copy already handed out.
+ * The engagement they are leaving is closed off and keeps its own credential,
+ * so an internship certificate still verifies afterwards. The new one opens
+ * with a fresh number.
  */
 function PromoteDialog({ member, onClose, onPromote }: {
   member: Member;
   onClose: () => void;
-  onPromote: (changes: Partial<Member>) => void;
+  onPromote: (to: { type: MemberType; role: string; on: string }) => void;
 }) {
   const [type, setType] = useState<MemberType>(member.type === 'intern' ? 'team' : 'team');
   const [role, setRole] = useState(member.role);
@@ -46,13 +46,7 @@ function PromoteDialog({ member, onClose, onPromote }: {
       <form
         onSubmit={event => {
           event.preventDefault();
-          onPromote({
-            type,
-            role,
-            promotedOn: on,
-            previousType: member.type,
-            previousRole: member.role,
-          });
+          onPromote({ type, role, on });
         }}
         className="space-y-4"
       >
@@ -63,9 +57,11 @@ function PromoteDialog({ member, onClose, onPromote }: {
           <span className="mx-2">→</span>
           <span className="font-semibold text-accent">{GROUP_LABEL[type]} · {role || '…'}</span>
           <p className="mt-2">
-            Keeps credential{' '}
-            <code className="font-mono text-foreground">{member.credentialId}</code>, so
-            anything already issued with it still verifies.
+            The {GROUP_LABEL[member.type].toLowerCase()} record is kept and closed
+            on this date, kee​ping{' '}
+            <code className="font-mono text-foreground">{member.credentialId}</code>{' '}
+            so anything already issued with it still verifies. A new record opens
+            with its own number.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -556,8 +552,13 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
                 )}
                 {member.promotedOn && member.previousType && (
                   <p className="mt-0.5 text-[11px] text-[#0a8f63] truncate">
-                    ↑ {GROUP_LABEL[member.previousType]} → {GROUP_LABEL[member.type]} ·{' '}
+                    ↑ promoted from {GROUP_LABEL[member.previousType].toLowerCase()} ·{' '}
                     {new Date(member.promotedOn).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                  </p>
+                )}
+                {member.credentialStatus === 'completed' && (
+                  <p className="mt-0.5 text-[11px] text-muted-foreground truncate">
+                    past engagement{member.endedOn ? ` · ended ${new Date(member.endedOn).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : ''}
                   </p>
                 )}
                 <MemberLinkSummary member={member} />
@@ -600,7 +601,7 @@ function MemberGroup({ type, title, hint, members, onEdit, onAddNew, onDelete, o
 }
 
 export default function MembersPanel() {
-  const { members, addMember, updateMember, deleteMember, reorderMember } = useAdmin();
+  const { members, addMember, updateMember, deleteMember, reorderMember, promoteMember } = useAdmin();
   const [modal, setModal] = useState<{ mode: 'add' | 'edit'; type: MemberType; member?: Member } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
   const [promoteTarget, setPromoteTarget] = useState<Member | null>(null);
@@ -650,8 +651,8 @@ export default function MembersPanel() {
         <PromoteDialog
           member={promoteTarget}
           onClose={() => setPromoteTarget(null)}
-          onPromote={changes => {
-            updateMember(promoteTarget.id, changes);
+          onPromote={to => {
+            promoteMember(promoteTarget.id, to);
             setPromoteTarget(null);
           }}
         />
