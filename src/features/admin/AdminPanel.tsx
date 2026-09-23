@@ -219,11 +219,18 @@ export default function AdminPanel() {
   const [search, setSearch] = useState("");
   /** Sidebar is a drawer below `lg`, always on screen from `lg` up. */
   const [navOpen, setNavOpen] = useState(false);
+  /**
+   * True when signed in through the development password rather than Supabase.
+   * Saving needs a real session, so without one every edit is lost on reload —
+   * worth saying out loud rather than letting it look like a bug.
+   */
+  const [sessionless, setSessionless] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       setAuthenticated(Boolean(data.session));
+      setSessionless(!data.session);
     };
 
     void checkSession();
@@ -244,6 +251,7 @@ export default function AdminPanel() {
         // write anything — but it must never be reachable on the live site.
         if (ALLOW_LOCAL_PASSWORD && password === adminPassword) {
           setAuthenticated(true);
+          setSessionless(true);
           return;
         }
         setError("Incorrect email or password.");
@@ -251,6 +259,7 @@ export default function AdminPanel() {
       }
 
       setAuthenticated(true);
+      setSessionless(false);
       setError("");
     } catch {
       if (ALLOW_LOCAL_PASSWORD && password === adminPassword) {
@@ -568,6 +577,17 @@ export default function AdminPanel() {
         </header>
 
         <main className="flex-1 min-w-0 w-full max-w-350 p-4 sm:p-6">
+          {sessionless && (
+            <div className="mb-5 flex gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+              <span aria-hidden="true" className="text-base leading-none">⚠</span>
+              <p className="text-sm leading-relaxed text-amber-900">
+                <strong>Development sign-in — nothing is being saved.</strong> You
+                are signed in with the built-in password, which grants no Supabase
+                session, so edits stay in this browser and disappear on reload.
+                Sign in with your admin email and password to make changes stick.
+              </p>
+            </div>
+          )}
           {tab === "dashboard" && (
             <DashboardPanel
               onNavigate={(next) =>
