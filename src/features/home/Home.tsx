@@ -1,7 +1,6 @@
 "use client";
 
 import { AppWindow, CodeXml, Layers, PenTool } from 'lucide-react'
-import GatewayFlow from '@/app/components/ui/GatewayFlow'
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
@@ -372,7 +371,6 @@ export default function Home() {
       <section className="hero2 relative overflow-hidden min-h-dvh flex flex-col justify-center">
         <div className="hero2-backdrop absolute inset-0" aria-hidden="true">
           <div className="absolute inset-0 hero-grid opacity-35" />
-          <GatewayFlow className="hero2-flow" />
         </div>
 
         <span className="hero2-note note-a" aria-hidden="true">

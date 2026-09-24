@@ -807,7 +807,6 @@ body {
     linear-gradient(165deg, #DCE9FB 0%, #C3DAF6 26%, #9FC0EC 52%, #B7D3F3 74%, #E6F0FC 100%);
 }
 .hero2-backdrop { pointer-events: none; }
-.hero2-flow { height: 100%; left: 0; opacity: .85; position: absolute; top: 0; width: 100%; }
 
 .hero2-kicker { align-items: center; color: #7A8AA8; display: flex; font-size: .68rem; font-weight: 700; gap: 8px; justify-content: center; letter-spacing: .2em; margin-bottom: 12px; text-transform: uppercase; }
 .hero2-kicker svg { color: #B7C4DB; height: 10px; width: 10px; }
