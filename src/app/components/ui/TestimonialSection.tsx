@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useAdmin } from '@/app/context/AdminContext';
+import { useAdmin, compareTestimonials } from '@/app/context/AdminContext';
 import { useReveal } from '@/app/hooks/useReveal';
 
 interface Props {
@@ -20,9 +20,10 @@ export default function TestimonialSection({ service }: Props) {
   // A product page shows only reviews of that product. "General" reviews are
   // not about any one product, so they belong on the home page, which shows
   // everything. With nothing to show the whole section hides itself below.
-  const filtered = service
+  const filtered = (service
     ? published.filter(t => t.service === service)
-    : published;
+    : published
+  ).slice().sort(compareTestimonials);
 
   const [active, setActive] = useState(0);
   const stageRef = useRef<HTMLDivElement>(null);

@@ -101,6 +101,23 @@ export type Testimonial = {
   overview?: string;
   publishedAt?: string;
   status: "published" | "draft";
+  /** 1 shows first, 2 second. 0 means no preference — see compareTestimonials. */
+  sortOrder?: number;
+};
+
+/**
+ * The order testimonials appear in, on the site and in the admin list.
+ *
+ * A positive number puts a testimonial that many places from the front. Zero
+ * means "no preference", and those sort to the back rather than ahead of the
+ * ones somebody deliberately numbered — otherwise numbering two of thirteen
+ * would push the other eleven in front of them. Ties fall back to the id, so
+ * the order never shuffles between loads.
+ */
+export const compareTestimonials = (a: Testimonial, b: Testimonial) => {
+  const rank = (t: Testimonial) =>
+    t.sortOrder && t.sortOrder > 0 ? t.sortOrder : Number.MAX_SAFE_INTEGER;
+  return rank(a) - rank(b) || a.id - b.id;
 };
 
 export type AdminService = {
@@ -1571,6 +1588,7 @@ const mapSupabaseTestimonial = (row: any): Testimonial => ({
   overview: row.overview ?? undefined,
   publishedAt: row.published_at ?? row.publishedAt ?? undefined,
   status: row.status === "draft" ? "draft" : "published",
+  sortOrder: Number(row.sort_order ?? row.sortOrder ?? 0),
 });
 
 const mapSupabaseWebsiteImage = (row: any): WebsiteImage => ({
@@ -1936,6 +1954,7 @@ const syncSupabaseContent = async ({
       overview: item.overview ?? null,
       published_at: item.publishedAt ?? new Date().toISOString(),
       status: item.status,
+      sort_order: item.sortOrder ?? 0,
     }));
 
     const websiteImageRows = websiteImages.map((image) => ({

@@ -7,6 +7,7 @@ import {
   type Client,
   type NewClient,
   type Testimonial,
+  compareTestimonials,
 } from '@/app/context/AdminContext';
 import { ConfirmDialog, Field, ImageDropzone, Modal, StarRatingInput, Stars } from './shared';
 
@@ -16,6 +17,7 @@ function emptyForm(defaultService: string): TestimonialFormValues {
   return {
     name: '', role: '', company: '', content: '', rating: 5, service: defaultService,
     photo: '', certificateImage: '', overview: '', publishedAt: new Date().toISOString().slice(0, 10), status: 'published',
+    sortOrder: 0,
   };
 }
 
@@ -56,6 +58,15 @@ function TestimonialFormModal({ services, initial, defaultService = 'General', o
             </select>
           </Field>
         </div>
+        <Field label="Display order" hint="1 shows first, 2 second, and so on. Leave it at 0 to let this one follow the numbered ones.">
+          <input
+            type="number"
+            min={0}
+            value={form.sortOrder ?? 0}
+            onChange={e => setForm(p => ({ ...p, sortOrder: Math.max(0, Math.floor(Number(e.target.value) || 0)) }))}
+            className="admin-input max-w-32"
+          />
+        </Field>
         <Field label="Star rating *">
           <StarRatingInput value={form.rating} onChange={rating => setForm(p => ({ ...p, rating }))} />
         </Field>
@@ -93,7 +104,7 @@ export function TestimonialsBoard({ testimonials, services, scopeService }: { te
     if (!scopeService && serviceFilter !== 'All' && t.service !== serviceFilter) return false;
     if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.company.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
-  }), [testimonials, serviceFilter, search, scopeService]);
+  }).sort(compareTestimonials), [testimonials, serviceFilter, search, scopeService]);
 
   return (
     <div>
@@ -119,6 +130,7 @@ export function TestimonialsBoard({ testimonials, services, scopeService }: { te
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b border-border bg-[#F8FAFC]">
+                  <th className="px-4 py-3 font-semibold w-20">Order</th>
                   <th className="px-4 py-3 font-semibold">Client</th>
                   <th className="px-4 py-3 font-semibold hidden lg:table-cell">Designation</th>
                   <th className="px-4 py-3 font-semibold hidden md:table-cell">Company</th>
@@ -131,6 +143,17 @@ export function TestimonialsBoard({ testimonials, services, scopeService }: { te
               <tbody>
                 {filtered.map(t => (
                   <tr key={t.id} className="border-b border-[#F3F4F7] last:border-0 hover:bg-[#F8FAFC] transition-colors">
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        min={0}
+                        value={t.sortOrder ?? 0}
+                        onChange={e => updateTestimonial(t.id, { sortOrder: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                        aria-label={`Display order for ${t.name}`}
+                        title="1 shows first. 0 means no preference."
+                        className="admin-order-input"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         {t.photo ? <img src={t.photo} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" /> : <div className="w-8 h-8 rounded-full bg-linear-to-br from-cyan-400 to-[#072069] flex items-center justify-center text-white font-bold text-[11px] shrink-0">{t.name.split(' ').map(n => n[0]).join('')}</div>}
