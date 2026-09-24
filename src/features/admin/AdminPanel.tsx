@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 const logoImg = "/Mlogo.png";
@@ -207,8 +208,9 @@ export default function AdminPanel() {
   } = useAdmin();
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("admin@leafclutchtech.com");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [tab, setTab] = useState<Tab>("dashboard");
   const [servicesExpanded, setServicesExpanded] = useState(true);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
@@ -372,7 +374,9 @@ export default function AdminPanel() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@leafclutchtech.com"
+                placeholder="you@example.com"
+                autoComplete="username"
+                required
                 className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:border-accent"
               />
             </div>
@@ -380,13 +384,30 @@ export default function AdminPanel() {
               <label className="text-sm font-medium text-foreground block mb-1.5">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                className="w-full px-4 py-3 border border-border rounded-xl text-sm focus:outline-none focus:border-accent"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  autoComplete="current-password"
+                  required
+                  className="w-full pl-4 pr-12 py-3 border border-border rounded-xl text-sm focus:outline-none focus:border-accent"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((shown) => !shown)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex w-12 items-center justify-center rounded-r-xl text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
             </div>
             {error && <p className="text-red-500 text-xs">{error}</p>}
             <button
