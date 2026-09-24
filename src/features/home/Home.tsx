@@ -435,8 +435,13 @@ export default function Home() {
                 />
               </div>
 
+              {/* The four services the company leads with, orbiting the mark.
+                  Each silhouette is deliberately different so they stay
+                  legible at badge size. */}
               <span
                 className="hero2-peek-badge badge-tl"
+                role="img"
+                aria-label="Web development"
                 style={{
                   background: "linear-gradient(145deg, #4FC3FF, #0B76C4)",
                 }}
@@ -450,11 +455,14 @@ export default function Home() {
                   strokeLinejoin="round"
                   className="w-5 h-5"
                 >
-                  <path d="M21 11.5a8.38 8.38 0 01-4.8 7.6 8.5 8.5 0 01-9.4-1.8L3 21l1.9-4.8a8.5 8.5 0 011.8-9.4A8.38 8.38 0 0114.3 3a8.5 8.5 0 016.7 8.5z" />
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <path d="M3 9h18M6.5 6.5h.01M9 6.5h.01" />
                 </svg>
               </span>
               <span
                 className="hero2-peek-badge badge-tr"
+                role="img"
+                aria-label="Coding"
                 style={{
                   background: "linear-gradient(145deg, #6BE3B4, #14A874)",
                 }}
@@ -468,12 +476,13 @@ export default function Home() {
                   strokeLinejoin="round"
                   className="w-5 h-5"
                 >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 8v4M12 16h.01" />
+                  <path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" />
                 </svg>
               </span>
               <span
                 className="hero2-peek-badge badge-bl"
+                role="img"
+                aria-label="Graphic design"
                 style={{
                   background: "linear-gradient(145deg, #7DA8FF, #2F5FDB)",
                 }}
@@ -487,12 +496,14 @@ export default function Home() {
                   strokeLinejoin="round"
                   className="w-5 h-5"
                 >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                  <path d="M15.2 3.3a2.3 2.3 0 0 1 3.2 3.2L7.6 17.4 3 19l1.6-4.6z" />
+                  <path d="m13.6 5 3.2 3.2" />
                 </svg>
               </span>
               <span
                 className="hero2-peek-badge badge-br"
+                role="img"
+                aria-label="Software development"
                 style={{
                   background: "linear-gradient(145deg, #4FD9C8, #0B8E93)",
                 }}
@@ -506,7 +517,9 @@ export default function Home() {
                   strokeLinejoin="round"
                   className="w-5 h-5"
                 >
-                  <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.1-3.1a6 6 0 01-8 8l-6.5 6.5a2.1 2.1 0 01-3-3l6.5-6.5a6 6 0 018-8l-3.1 3.1z" />
+                  <path d="m12 2.5 9 4.8-9 4.8-9-4.8z" />
+                  <path d="m3 12.2 9 4.8 9-4.8" />
+                  <path d="m3 16.9 9 4.8 9-4.8" />
                 </svg>
               </span>
             </div>
