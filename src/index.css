@@ -807,6 +807,7 @@ body {
     linear-gradient(165deg, #DCE9FB 0%, #C3DAF6 26%, #9FC0EC 52%, #B7D3F3 74%, #E6F0FC 100%);
 }
 .hero2-backdrop { pointer-events: none; }
+.hero2-flow { height: 100%; left: 0; opacity: .85; position: absolute; top: 0; width: 100%; }
 
 .hero2-kicker { align-items: center; color: #7A8AA8; display: flex; font-size: .68rem; font-weight: 700; gap: 8px; justify-content: center; letter-spacing: .2em; margin-bottom: 12px; text-transform: uppercase; }
 .hero2-kicker svg { color: #B7C4DB; height: 10px; width: 10px; }
@@ -864,7 +865,7 @@ body {
   top: 50%;
   width: 44px;
   z-index: 1;
-  animation: heroPeek 3s ease-in-out infinite;
+  animation: heroPeek 4.4s ease-in-out infinite;
 }
 .hero2-peek-badge::before {
   content: '';
@@ -873,7 +874,8 @@ body {
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(255,255,255,.55), transparent 60%);
 }
-.hero2-peek-badge svg { position: relative; z-index: 1; }
+.hero2-peek-badge svg { position: relative; z-index: 1; animation: badgeIconBreathe 2.6s ease-in-out infinite; }
+@keyframes badgeIconBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 @keyframes heroPeek {
   0%, 100% { transform: translate(-50%,-50%) translate(0,0) scale(.3); opacity: 0; z-index: 1; }
   10% { opacity: 0; }
@@ -881,10 +883,10 @@ body {
   55% { transform: translate(-50%,-50%) translate(var(--peek-x), var(--peek-y)) scale(1); opacity: 1; z-index: 5; }
   78% { transform: translate(-50%,-50%) translate(0,0) scale(.3); opacity: 0; z-index: 1; }
 }
-.hero2-peek-badge.badge-tl { --peek-x: -96px; --peek-y: -78px; animation-delay: 0s; }
-.hero2-peek-badge.badge-tr { --peek-x: 96px; --peek-y: -78px; animation-delay: 0s; }
-.hero2-peek-badge.badge-bl { --peek-x: -96px; --peek-y: 78px; animation-delay: 0s; }
-.hero2-peek-badge.badge-br { --peek-x: 96px; --peek-y: 78px; animation-delay: 0s; }
+.hero2-peek-badge.badge-tl { --peek-x: -96px; --peek-y: -78px; }
+.hero2-peek-badge.badge-tr { --peek-x: 96px; --peek-y: -78px; }
+.hero2-peek-badge.badge-bl { --peek-x: -96px; --peek-y: 78px; }
+.hero2-peek-badge.badge-br { --peek-x: 96px; --peek-y: 78px; }
 .hero2-platform { background: radial-gradient(ellipse at center, rgba(14,165,233,.32), rgba(14,165,233,.06) 62%, transparent 76%); border-radius: 50%; height: 26px; margin: 6px auto 0; width: 170px; }
 
 @keyframes haloPulse { 0%, 100% { transform: translate(-50%,-50%) scale(.92); opacity: .75; } 50% { transform: translate(-50%,-50%) scale(1.08); opacity: 1; } }
@@ -990,7 +992,11 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .hero2-globe-logo, .hero2-ring, .hero2-ring-spin, .hero2-particle, .hero2-halo, .hero2-peek-badge { animation: none !important; }
-  .hero2-peek-badge { opacity: 0; }
+  .hero2-peek-badge {
+    opacity: 1;
+    transform: translate(-50%,-50%) translate(var(--peek-x), var(--peek-y));
+  }
+  .hero2-peek-badge svg { transform: none; }
 }
 
 /* ── Cards ── */

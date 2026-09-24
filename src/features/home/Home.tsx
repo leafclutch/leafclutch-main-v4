@@ -1,5 +1,7 @@
 "use client";
 
+import { AppWindow, CodeXml, Layers, PenTool } from 'lucide-react'
+import GatewayFlow from '@/app/components/ui/GatewayFlow'
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRevealAll } from "@/app/hooks/useReveal";
@@ -193,6 +195,20 @@ const provinceHubs = [
   },
 ];
 
+
+/**
+ * The four services the company leads with, orbiting the brand mark. The icons
+ * are lucide's — the set 21st.dev builds on — so the silhouettes stay
+ * consistent with one another at badge size, where a stray stroke width or a
+ * mismatched corner radius is the difference between a set and a jumble.
+ */
+const HERO_BADGES = [
+  { corner: 'tl', label: 'Web development', Icon: AppWindow, background: 'linear-gradient(145deg, #4FC3FF, #0B76C4)' },
+  { corner: 'tr', label: 'Coding', Icon: CodeXml, background: 'linear-gradient(145deg, #6BE3B4, #14A874)' },
+  { corner: 'bl', label: 'Graphic design', Icon: PenTool, background: 'linear-gradient(145deg, #7DA8FF, #2F5FDB)' },
+  { corner: 'br', label: 'Software development', Icon: Layers, background: 'linear-gradient(145deg, #4FD9C8, #0B8E93)' },
+] as const
+
 export default function Home() {
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(true);
   const whyIntroRef = useRef<HTMLDivElement>(null);
@@ -356,6 +372,7 @@ export default function Home() {
       <section className="hero2 relative overflow-hidden min-h-dvh flex flex-col justify-center">
         <div className="hero2-backdrop absolute inset-0" aria-hidden="true">
           <div className="absolute inset-0 hero-grid opacity-35" />
+          <GatewayFlow className="hero2-flow" />
         </div>
 
         <span className="hero2-note note-a" aria-hidden="true">
@@ -435,93 +452,19 @@ export default function Home() {
                 />
               </div>
 
-              {/* The four services the company leads with, orbiting the mark.
-                  Each silhouette is deliberately different so they stay
-                  legible at badge size. */}
-              <span
-                className="hero2-peek-badge badge-tl"
-                role="img"
-                aria-label="Web development"
-                style={{
-                  background: "linear-gradient(145deg, #4FC3FF, #0B76C4)",
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
+              {HERO_BADGES.map(({ corner, label, Icon, background }, index) => (
+                <span
+                  key={corner}
+                  className={`hero2-peek-badge badge-${corner}`}
+                  role="img"
+                  aria-label={label}
+                  /* Staggered so the four fan out one after another rather
+                     than blinking in unison. */
+                  style={{ background, animationDelay: `${index * 0.38}s` }}
                 >
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <path d="M3 9h18M6.5 6.5h.01M9 6.5h.01" />
-                </svg>
-              </span>
-              <span
-                className="hero2-peek-badge badge-tr"
-                role="img"
-                aria-label="Coding"
-                style={{
-                  background: "linear-gradient(145deg, #6BE3B4, #14A874)",
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                >
-                  <path d="m8 7-5 5 5 5M16 7l5 5-5 5M13.5 4l-3 16" />
-                </svg>
-              </span>
-              <span
-                className="hero2-peek-badge badge-bl"
-                role="img"
-                aria-label="Graphic design"
-                style={{
-                  background: "linear-gradient(145deg, #7DA8FF, #2F5FDB)",
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                >
-                  <path d="M15.2 3.3a2.3 2.3 0 0 1 3.2 3.2L7.6 17.4 3 19l1.6-4.6z" />
-                  <path d="m13.6 5 3.2 3.2" />
-                </svg>
-              </span>
-              <span
-                className="hero2-peek-badge badge-br"
-                role="img"
-                aria-label="Software development"
-                style={{
-                  background: "linear-gradient(145deg, #4FD9C8, #0B8E93)",
-                }}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="w-5 h-5"
-                >
-                  <path d="m12 2.5 9 4.8-9 4.8-9-4.8z" />
-                  <path d="m3 12.2 9 4.8 9-4.8" />
-                  <path d="m3 16.9 9 4.8 9-4.8" />
-                </svg>
-              </span>
+                  <Icon className="w-5 h-5" strokeWidth={2} aria-hidden="true" />
+                </span>
+              ))}
             </div>
           </div>
 
